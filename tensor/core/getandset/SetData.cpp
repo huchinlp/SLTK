@@ -322,7 +322,7 @@ void _SetDataDim(XTensor * tensor, int beg, int len, int dim, DTYPE p)
     CheckNTErrors(tensor->dataType == DEFAULT_DTYPE, "TODO!");
     CheckNTErrors(dim < n && dim >= 0, "Illegal dimension!");
     CheckNTErrors(beg >= 0 && beg < tensor->GetDim(dim), "Illegal beginning position!");
-    CheckNTErrors(beg + len >= 0 && beg + len < tensor->GetDim(dim), "Illegal length!");
+    CheckNTErrors(beg + len >= 0 && beg + len <= tensor->GetDim(dim), "Illegal length!");
     
     if(tensor->devID < 0){
         int stride = 1;

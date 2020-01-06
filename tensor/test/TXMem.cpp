@@ -159,7 +159,7 @@ bool TestXMemCase1()
 
     delete[] buf;
 
-    return ok;
+    return 0;
 }
 
 /* test for memory pool class */

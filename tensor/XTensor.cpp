@@ -526,6 +526,8 @@ void XTensor::SetDevice(int myDevId, XMem * myMem)
     }
     else {
         myMem = GMems.GetMem(myDevId);
+        FlushToMem(myMem);
+        isInGlobalMem = false;
     }
 }
 
