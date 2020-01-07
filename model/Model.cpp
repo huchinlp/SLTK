@@ -19,9 +19,9 @@ void Model::ToDevice(int devID)
 }
 
 /* get a parameter by its name */
-XTensor* Model::operator[](const char* name)
+XTensor& Model::operator[](const char* name)
 {
-    return parameters.GetParameter(name);
+    return Get(name);
 }
 
 /* load a model from a binary file */
@@ -73,9 +73,9 @@ void Model::Dump(const char* fn)
 }
 
 /* get a parameter by its name */
-XTensor* Model::Get(const string& name)
+XTensor& Model::Get(const string& name)
 {
-    return parameters.GetParameter(name);
+    return *parameters.GetParameter(name);
 }
 
 /* add a parameter to the list */

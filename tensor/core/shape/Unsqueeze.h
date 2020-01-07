@@ -28,14 +28,14 @@ namespace nts { // namespace nts(NiuTrans.Tensor)
 
 /* insert a dimension by copying the blocks for x times 
   (where x is the size of the inerted dimension) */
-void _Unsqueeze(const XTensor * a, XTensor * b, int dim, int dSize);
+void _Unsqueeze(const XTensor * a, XTensor * b, int dim, int dSize=1);
 
 /* insert a dimension by copying the blocks for x times 
   (where x is the size of the inerted dimension) (return an XTensor structure)
    make a new tensor to keep the result and return it */
-XTensor Unsqueeze(const XTensor &a, int dim, int dSize);
+XTensor Unsqueeze(const XTensor &a, int dim, int dSize=1);
 
-void Unsqueeze(const XTensor &a, XTensor &b, int dim, int dSize);
+void Unsqueeze(const XTensor &a, XTensor &b, int dim, int dSize=1);
 
 } // namespace nts(NiuTrans.Tensor)
 

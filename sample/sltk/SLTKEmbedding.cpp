@@ -19,19 +19,11 @@
   * $Created by: HU Chi (huchinlp@foxmail.com) 2020.01.02
   */
 
-
-#include <string>
-#include <memory>
-#include <fstream>
-#include <algorithm>
-
-#include "SLTKUtility.h"
 #include "SLTKEmbedding.h"
 #include "../../tensor/core/CHeader.h"
 
 using namespace std;
 
-namespace util {
 
 /*
 load pre-trained embeddings from file
@@ -39,7 +31,7 @@ load pre-trained embeddings from file
 >>> embSize - the embedding dimension
 >>> myDevID - the device id
 */
-Word2Vec::Word2Vec(const char* fn, int myDevID)
+void Embedding::LoadWordEmbeddings(const char* fn, int myDevID)
 {
     devID = myDevID;
     FILE* f = fopen(fn, "rb");
@@ -56,9 +48,7 @@ Word2Vec::Word2Vec(const char* fn, int myDevID)
 set embeddings for a mini-batch
 >>> input - the input tensor
 */
-XTensor Word2Vec::Embed(XTensor& input)
+XTensor Embedding::Embed(XTensor& input)
 {
     return Gather(vec, input);
 }
-
-} // namespace util

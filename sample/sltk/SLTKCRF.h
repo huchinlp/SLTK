@@ -19,88 +19,53 @@
  * $Created by: HU Chi (huchinlp@foxmail.com)
  */
 
-#ifndef CRF_H_
-#define CRF_H_
+#ifndef __CRF_H__
+#define __CRF_H__
 
 #include <vector>
+#include "..//..//model/Model.h"
 #include "../../tensor/XTensor.h"
-#include "SLTKDataUtility.h"
 
 using namespace nts;
 using namespace std;
-using namespace util;
-namespace ner
-{
 
-/* a CRF structure
- * probability computation:  forward-backward algorithm
- * decode:  Viterbi algorithm
- * see "An Introduction to Conditional Random Fields" for more details */
-class CRF
+/*  This module implements a conditional random field. 
+ *  The forward computation computes the log likelihood 
+ *  of the given sequence of tags and emission score tensor. 
+ *  It also has decode method which finds the best tag sequence 
+ *  given an emission score tensor using `Viterbi algorithm`. 
+ *  Ref: "Conditional random fields: Probabilistic models for segmenting and labeling sequence data".
+ *  Viterbi algorithm: https://en.wikipedia.org/wiki/Viterbi_algorithm
+ */
+
+struct CRF : public Model
 {
 public:
 
-    /* normalization factors */
-    vector<DTYPE> logNorm;
+    /* number of tags */
+    int tagNum;
 
-    /* transition matrix */
-    XTensor* transition;
-
-    /* constructor */
-    CRF(int tagNum, int startTag, int stopTag);
+    /* if the first dim of input is batchSize */
+    bool batchFirst;
 
     /* constructor */
+    CRF(int tagNum, bool batchFirst);
+
+    /* initializer */
+    void ResetParams();
+
+    /* decoder */
+    vector<vector<int>> Decode(XTensor& emissions, XTensor& mask);
+
+    /* viterbi decoder */
+    vector<vector<int>> ViterbiDecode(XTensor& emissions, XTensor& mask);
+
+    /* de-constructor */
     ~CRF();
 
-    /* reset cache */
-    void ResetCache();
-
-    /* get alpha_i or beta_i */
-    void GetAlphaBeta(XTensor &res, bool isAlpha, int sent, int pos);
-
-    /* set alpha_i or beta_i */
-    void SetAlphaBeta(XTensor & src, bool isAlpha, int sent, int pos);
-
-    /* compute the loss in a CRF */
-    DTYPE LogLikelihood(XTensor *inputs,
-                        const vector<vector<int>> &tagIndices,
-                        const vector<int> &realLengths);
-
-    /* compute the unary scores of sequences */
-    void GetUnaryScore(const XTensor *inputs,
-                    vector<DTYPE> &unaryScores,
-                    const vector<vector<int>> &tagIndices,
-                    const vector<int> &realLengths);
-
-    /* compute the binary scores of sequences */
-    void GetBinaryScore(const XTensor *inputs,
-                     vector<DTYPE> &binaryScores,
-                     const vector<vector<int>> &tagIndices,
-                     const vector<int> &realLengths) const;
-
-    /* compute normalizations in a CRF */
-    void CRFLogNorm(XTensor *inputs,
-                    vector<DTYPE> &normalizations,
-                    const vector<int> &realLengths);
-
-    /* compute forward vector in a CRF */
-    void CalAlpha(XTensor &res, int sent, int pos, bool isCached);
-
-    /* compute backward vector in a CRF */
-    void CalBeta(XTensor &res, int sent, int pos, bool isCached);
-
-    /* decode the highest scoring sequence of tags for sentences in a mini-batch */
-    void Decode(vector<vector<int>> &paths,
-                XTensor *extendedScores,
-                const vector<int> &realLengths);
-
-    /* decode the highest scoring sequence of tags for a sentence */
-    void Viterbi(vector<int> &result, XTensor * score) const;
-
-    /* backward propagation in a CRF */
-    void Backward(XTensor * inputs, const vector<int> &realLengths, const vector<vector<int>> &tagIndices);
 };
 
-} // namespace ner
+/* Return a tensor of elements selected from either x or y, depending on condition. */
+XTensor Where(XTensor& condition, XTensor& x, XTensor& y);
 
-#endif // !CRF_H_
+#endif // __CRF_H__

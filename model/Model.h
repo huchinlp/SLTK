@@ -66,10 +66,10 @@ public:
     void Dump(const char* fn);
 
     /* get a parameter by its name */
-    XTensor* Get(const string& name);
+    XTensor& Get(const string& name);
 
     /* get a parameter by its name */
-    XTensor* operator[] (const char* name);
+    XTensor& operator[] (const char* name);
 
     /* register a parameter with a unique name */
     void Register(const string& name, Dim dims, TENSOR_DATA_TYPE dataType);

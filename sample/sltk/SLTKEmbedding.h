@@ -19,20 +19,15 @@
  * $Created by: HU Chi (huchinlp@foxmail.com)
  */
 
-#ifndef DATA_UTILITY_H_
-#define DATA_UTILITY_H_
+#ifndef __EMBEDDING_H__
+#define __EMBEDDING_H__
 
-#include <fstream>
 #include "../../tensor/XGlobal.h"
-#include "../../tensor/XTensor.h"
 
 using namespace nts;
 using namespace std;
 
-namespace util
-{
-
-struct Word2Vec
+struct Embedding
 {
     /* device id */
     int devID;
@@ -47,13 +42,11 @@ struct Word2Vec
     XTensor vec;
 
     /* load embeddings from a file */
-    Word2Vec(const char *fn, int myDevID);
+    void LoadWordEmbeddings(const char *fn, int myDevID);
 
     /* gather embeddings for the input */
     XTensor Embed(XTensor& input);
 };
 
 
-} // namespace util
-
-#endif // DATA_UTILITY_H_
+#endif // __EMBEDDING_H__

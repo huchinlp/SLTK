@@ -19,16 +19,12 @@
   * $Created by: HU Chi (huchinlp@foxmail.com)
   */
 
-#include "SLTKUtility.h"
+#include <string>
+#include <memory>
+#include "StringUtil.h"
 #include "SLTKLSTMCell.h"
 #include "../../tensor/core/CHeader.h"
 #include "../../tensor/function/FHeader.h"
-#include <string>
-#include "StringUtil.h"
-
-using namespace ner;
-using namespace util;
-namespace ner {
 
 /*
 constructor
@@ -37,15 +33,18 @@ constructor
 >>> layerNum - the number of layers
 >>> bidirectional - use bi-lstm or not
 */
-LSTM::LSTM(int inputDim, int hiddenDim, int layerNum, bool bidirectional)
+LSTM::LSTM(int myInputDim, int myHiddenDim, int myLayerNum, bool myBidirectional)
 {
     /* register parameters */
+    inputDim = myInputDim;
+    hiddenDim = myHiddenDim;
+    layerNum = myLayerNum;
+    bidirectional = myBidirectional;
     int numPerLayer = bidirectional ? 2 : 1;
     for (int i = 0; i < layerNum * numPerLayer; i++) {
-        LSTMCell* cell = new LSTMCell(inputDim, hiddenDim, i);
+        auto cell = make_shared<LSTMCell>(inputDim, hiddenDim, i);
         cells.push_back(cell);
     }
-
 }
 
 
@@ -53,9 +52,67 @@ LSTM::~LSTM()
 {
 }
 
-
-void LSTM::Forward(XTensor& input, XTensor& lastHidden, XTensor& hiddens)
+/* generate a range of number */
+auto GetRange(int size, bool isReversed)
 {
+    vector<int> range;
+    for (int i = 0; i < size; i++)
+        range.push_back(i);
+    if (isReversed)
+        reverse(range.begin(), range.end());
+    return range;
+}
+
+/* 
+lstm forward function 
+>>> input - (batchSize, maxLen, inputDim)
+>>> hidden - (batchSize, hiddenDim)
+>>> memory - (batchSize, hiddenDim)
+<<< hiddens - (batchSize, maxLen, hiddenDim (x2 if bidirectional is true))
+*/
+XTensor LSTM::Forward(XTensor& input, XTensor& hidden, XTensor& memory)
+{
+    TensorList list;
+    Split(input, 1, input.GetDim(1));
+
+    int bsz = input.GetDim(0);
+    int maxLen = input.GetDim(1);
+
+    XTensor fwdHiddens;
+    XTensor bwdHiddens;
+    InitTensor3DV2(&fwdHiddens, bsz, maxLen, hiddenDim, X_FLOAT, input.devID);
+    if (bidirectional) {
+        InitTensor3DV2(&bwdHiddens, bsz, maxLen, hiddenDim, X_FLOAT, input.devID);
+    }
+
+    bool isReversed = false;
+
+    /* iteration of layers */
+    for (int i = 0; i < cells.size(); i++) {
+
+        XTensor* hiddens = &fwdHiddens;
+        isReversed = ((i % 2 == 0) && bidirectional) ? true : false;
+        if (isReversed) {
+            hiddens = &bwdHiddens;
+        }
+        auto range = GetRange(input.GetDim(1), isReversed);
+
+        /* iteration of timesteps */
+        for (int idx : range) {
+            cells[i]->Forward(*list[idx], hidden, memory, i);
+            int srcIdx[]{ 0 };
+            int tgtIdx[]{ idx };
+
+            /* collect hidden states of the last layer */
+            if (i == cells.size() - 1 || (bidirectional && i == cells.size() - 2)) {
+                _CopyIndexed(&hidden, hiddens, 1, srcIdx, 1, tgtIdx);
+            }
+        }
+    }
+    if (bidirectional)
+        return Concatenate(fwdHiddens, bwdHiddens, 2);
+    else
+        return fwdHiddens ;
 }
 
 /*
@@ -71,18 +128,25 @@ LSTMCell::LSTMCell(int inputDim, int hiddenDim, int index)
     Register(concat("Bias_H_", index), { hiddenDim }, X_FLOAT);
 }
 
-void LSTMCell::Forward(XTensor& x, XTensor& hPrev, XTensor& cPrev, XTensor& h, XTensor& c, int index)
+/*
+lstm cell forward
+>>> x - input, (batchSize, inputDim)
+>>> h - hidden state, (batchSize, hiddenDim)
+>>> c - memory state, (batchSize, hiddenDim)
+>>> index - the index of lstm parameters
+*/
+void LSTMCell::Forward(XTensor& x, XTensor& h, XTensor& c, int index)
 {
     auto weight = Get(concat("Weight_H_", index));
     auto biasH = Get(concat("Bias_H_", index));
     auto biasF = Get(concat("Bias_F_", index));
 
-    // combine x and h before the transformation
-    XTensor xh = Concatenate(x, hPrev, x.order - 1);
+    /* combine x and h before the transformation */
+    XTensor xh = Concatenate(x, h, x.order - 1);
     XTensor noGated = MatrixMul(xh, *weight);
     noGated = noGated + *biasH;
 
-    // split the big tensor to 4 parts
+    /* split the big tensor to 4 parts */
     TensorList splited(4);
     Split(noGated, splited, noGated.order - 1, 4);
 
@@ -94,12 +158,9 @@ void LSTMCell::Forward(XTensor& x, XTensor& hPrev, XTensor& cPrev, XTensor& h, X
     /* apply gating to the transformed tensor */
     XTensor g = HardTanH(*j);
     XTensor gatedin = Sigmoid(*i) * g;
-    XTensor memory = cPrev * Sigmoid(*f + *biasF);
+    XTensor memory = h * Sigmoid(*f + *biasF);
 
     /* update memory state and hidden state */
     c = memory + gatedin;
     h = HardTanH(c) * Sigmoid(*o);
 }
-
-
-} // namespace ner

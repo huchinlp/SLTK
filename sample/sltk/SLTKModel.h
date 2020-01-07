@@ -19,47 +19,73 @@
   * $Created by: HU Chi (huchinlp@foxmail.com)
   */
 
-#ifndef BLSTM_CRF_MODEL_H_
-#define BLSTM_CRF_MODEL_H_
+#ifndef __BLSTM_CRF_MODEL_H__
+#define __BLSTM_CRF_MODEL_H__
 
-#include <string>
-
-#include "..//..//model/Model.h"
 #include "SLTKCRF.h"
 #include "SLTKLSTMCell.h"
-#include "SLTKDataUtility.h"
+#include "SLTKEmbedding.h"
+#include "SLTKDataSet.h"
+#include "../../model/Model.h"
 #include "../../tensor/XGlobal.h"
-#include "../../tensor/XTensor.h"
 
 using namespace nts;
 using namespace std;
-using namespace util;
-namespace ner {
+#undef Linear
 
 /* the sequence labeling model */
 struct SequenceTagger: Model
 {
+    /* dropout rate for input and output */
+    float dropout;
+
+    /* dropout rate for input, drop along the legth axis */
+    float wordDropout;
+
+    /* dropout rate for input and output, drop along the embedding axis */
+    float lockedDropout;
+
     /* embedding */
     Embedding* embedding;
 
-    /* RNNs(bi-directional) */
-    Model* rnns;
+    /* embeddings to input */
+    shared_ptr<Linear> embedding2NN;
+
+    /* RNNs */
+    shared_ptr<LSTM> rnns;
+
+    /* RNN output to tag */
+    shared_ptr<Linear> rnn2tag;
 
     /* CRF layer */
-    CRF* crf;
+    shared_ptr<CRF> crf;
 
-    XList GetParameters();
+    /* vocab for input and tags */
+    Vocab* vocab;
 
+    /* forward function */
     XTensor Forward(XTensor& input);
 
-    explicit SequenceTagger(Dict* tagDict, bool useCRF, bool useRNN,
-                            int rnnLayer, int hiddenSize, Embedding* embedding,
-                            const string& tagType, const string& rnnType,
-                            float dropout, float wordropout, float lockedropout);
+    /* predict tags */
+    vector<vector<int>> Predict(XTensor& input, XTensor& mask);
 
+    /* constructor */
+    explicit SequenceTagger(int rnnLayer, int hiddenSize,
+                            Vocab* myVocab, Embedding* myEmbedding,
+                            float myDropout, float myWordropout, float myLockedropout);
+
+    /* de-constructor */
     ~SequenceTagger();
 };
 
-} // namespace ner
+/* linear model */
+struct Linear :public Model
+{
+    /* constructor */
+    Linear(int inputDim, int outputDim);
 
-#endif // BLSTM_CRF_MODEL_H_
+    /* forward function */
+    XTensor Forward(XTensor& input);
+};
+
+#endif // __BLSTM_CRF_MODEL_H__

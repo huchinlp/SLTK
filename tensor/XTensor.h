@@ -213,6 +213,9 @@ public:
     /* shallow copy of tensor */
     void ShallowCopy(const XTensor &tensor);
 
+    /* overloading of the select function */
+    XTensor& operator[] (int index);
+
     /* overloading of the equal-sign */
     XTensor& operator= (const XTensor &tensor);
 

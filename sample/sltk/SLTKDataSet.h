@@ -25,6 +25,7 @@
 #include <cstdio>
 #include <unordered_map>
 #include "../../tensor/XTensor.h"
+
 using namespace std;
 using namespace nts;
 

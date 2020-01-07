@@ -20,30 +20,71 @@
   * happy coding 2020~
   */
 
+#include <memory>
 #include "SLTKModel.h"
-#include "SLTKUtility.h"
 #include "../../tensor/core/CHeader.h"
+#undef Linear
 
-using namespace util;
-
-namespace ner {
-
-
-XTensor SequenceTagger::Forward(XTensor& input)
+XTensor SequenceTagger::Forward(XTensor& sentences)
 {
-    return XTensor();
-}
+    XTensor hidden;
+    XTensor memory;
 
-
-SequenceTagger::SequenceTagger(Dict* tagDict, bool useCRF, bool useRNN, 
-                               int rnnLayer, int hiddenSize, Embedding* embedding, 
-                               const string& tagType, const string& rnnType, 
-                               float dropout, float wordropout, float lockedropout)
-{
-    Register("transition", { tagDict->tagNum, tagDict->tagNum }, X_FLOAT);
-    Register("embedding2NN", { embedding->outDim, embedding->outDim }, X_FLOAT);
-    Register("linear", { hiddenSize*2, tagDict->tagNum }, X_FLOAT);
+    auto input = embedding2NN->Forward(embedding->Embed(sentences));
     
+    auto rnnOutput = rnns->Forward(input, hidden, memory);
+
+    return rnn2tag->Forward(rnnOutput);
 }
 
-} // namespace ner
+/* 
+predict tags 
+>>> input - (bsz, len)
+>>> mask - (bsz, len)
+<<< tags - (bsz, len)
+*/
+vector<vector<int>> SequenceTagger::Predict(XTensor& input, XTensor& mask)
+{
+    auto features = Forward(input);
+    return crf->Decode(features, mask);
+}
+
+
+
+SequenceTagger::SequenceTagger(int rnnLayer, int hiddenSize,
+                               Vocab* myVocab, Embedding* myEmbedding,
+                               float myDropout, float myWordropout, float myLockedropout)
+{
+    vocab = myVocab;
+
+    int tagNum = vocab->vocabSizes[1];
+    
+    embedding = myEmbedding;
+    
+    crf = make_shared<CRF>(tagNum);
+    
+    rnns = make_shared<LSTM>(embedding->embSize, hiddenSize, rnnLayer, true);
+
+    embedding2NN = make_shared<Linear>(embedding->embSize, embedding->embSize);
+    
+    rnn2tag = make_shared<Linear>(hiddenSize * 2, tagNum);
+}
+
+/* de-constructor */
+SequenceTagger::~SequenceTagger()
+{
+}
+
+/* constructor */
+Linear::Linear(int inputDim, int outputDim)
+{
+    Register("Weight", { inputDim, outputDim }, X_FLOAT);
+    Register("Bias", { outputDim }, X_FLOAT);
+}
+
+/* forward function */
+XTensor Linear::Forward(XTensor& input)
+{
+    return MatrixMul(input, Get("Weight")) + Get("Bias");
+}
+

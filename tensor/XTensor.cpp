@@ -325,6 +325,14 @@ void XTensor::ShallowCopy(const XTensor &tensor)
     memcpy(isAllValued, tensor.isAllValued, sizeof(bool) * MAX_TENSOR_DIM_NUM);
 }
 
+/* overloading of the select function */
+XTensor& XTensor::operator[](int index)
+{
+    int low = 0;
+    int high = dimSize[index] - 1;
+    return SelectRange(*this, index, low, high);
+}
+
 /* overloading of the equal-sign */
 XTensor& XTensor::operator= (const XTensor& tensor)
 {

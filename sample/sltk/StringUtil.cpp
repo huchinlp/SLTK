@@ -81,6 +81,7 @@ vector<string> SplitString(const string& s, const string& delimiter)
     return values;
 }
 
+/* concat variable parameters to a string */
 void addToStream(std::ostringstream&) {}
 
 template<typename T, typename... Args>

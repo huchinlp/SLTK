@@ -19,38 +19,53 @@
   * $Created by: HU Chi (huchinlp@foxmail.com)
   */
 
-#ifndef LSTM_CELL_H_
-#define LSTM_CELL_H_
+#ifndef __LSTM_CELL_H__
+#define __LSTM_CELL_H__
 
 
-#include "../..//model/Model.h"
+#include "../../model/Model.h"
 
 using namespace nts;
 using namespace std;
-using namespace util;
 
-namespace ner {
-
-struct LSTMCell : Model
+/* lstm cell */
+struct LSTMCell : public Model
 {
+    /* constructor */
     LSTMCell(int inputDim, int hiddenDim, int index);
 
-    void Forward(XTensor& x, XTensor& hPrev, XTensor& cPrev, XTensor& h, XTensor& c, int index);
+    /* lstm forward function in a cell */
+    void Forward(XTensor& x, XTensor& h, XTensor& c, int index);
 };
 
-struct LSTM : Model
+/* lstm struct */
+struct LSTM : public Model
 {
-    vector<LSTMCell*> cells;
 
+    /* input dim */
+    int inputDim;
+
+    /* hidden dim */
+    int hiddenDim;
+
+    /* layer number */
+    int layerNum;
+
+    /* is bidirectional or not */
+    bool bidirectional;
+
+    /* lstm cells */
+    vector<shared_ptr<LSTMCell>> cells;
+
+    /* constructor */
     LSTM(int inputDim, int hiddenDim, int layerNum, bool bidirectional);
 
+    /* de-constructor */
     ~LSTM();
 
-    /* biLSTM forward propagation (in a mini-batch) */
-    void Forward(XTensor& input, XTensor& lastHidden, XTensor& hiddens);
+    /* forward */
+    XTensor Forward(XTensor& input, XTensor& hidden, XTensor& memory);
 
 };
 
-} // namespace ner
-
-#endif // LSTM_CELL_H_
+#endif // __LSTM_CELL_H__
