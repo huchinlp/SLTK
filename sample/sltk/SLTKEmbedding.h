@@ -15,17 +15,16 @@
  * limitations under the License.
  */
 
-/*
- * $Created by: HU Chi (huchinlp@foxmail.com)
- */
+ /*
+  * $Created by: HU Chi (huchinlp@foxmail.com)
+  */
 
-#ifndef __EMBEDDING_H__
-#define __EMBEDDING_H__
+#pragma once
 
+#include "../../tensor/XTensor.h"
 #include "../../tensor/XGlobal.h"
 
 using namespace nts;
-using namespace std;
 
 struct Embedding
 {
@@ -42,11 +41,8 @@ struct Embedding
     XTensor vec;
 
     /* load embeddings from a file */
-    void LoadWordEmbeddings(const char *fn, int myDevID);
+    void LoadWordEmbeddings(const char* fn, int myDevID);
 
     /* gather embeddings for the input */
     XTensor Embed(XTensor& input);
 };
-
-
-#endif // __EMBEDDING_H__

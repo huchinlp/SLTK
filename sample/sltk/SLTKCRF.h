@@ -15,12 +15,11 @@
  * limitations under the License.
  */
 
-/*
- * $Created by: HU Chi (huchinlp@foxmail.com)
- */
+ /*
+  * $Created by: HU Chi (huchinlp@foxmail.com)
+  */
 
-#ifndef __CRF_H__
-#define __CRF_H__
+#pragma once
 
 #include <vector>
 #include "..//..//model/Model.h"
@@ -29,11 +28,11 @@
 using namespace nts;
 using namespace std;
 
-/*  This module implements a conditional random field. 
- *  The forward computation computes the log likelihood 
- *  of the given sequence of tags and emission score tensor. 
- *  It also has decode method which finds the best tag sequence 
- *  given an emission score tensor using `Viterbi algorithm`. 
+/*  This module implements a conditional random field.
+ *  The forward computation computes the log likelihood
+ *  of the given sequence of tags and emission score tensor.
+ *  It also has decode method which finds the best tag sequence
+ *  given an emission score tensor using `Viterbi algorithm`.
  *  Ref: "Conditional random fields: Probabilistic models for segmenting and labeling sequence data".
  *  Viterbi algorithm: https://en.wikipedia.org/wiki/Viterbi_algorithm
  */
@@ -49,7 +48,7 @@ public:
     bool batchFirst;
 
     /* constructor */
-    CRF(int tagNum, bool batchFirst);
+    CRF(int tagNum, bool batchFirst = true);
 
     /* initializer */
     void ResetParams();
@@ -59,13 +58,7 @@ public:
 
     /* viterbi decoder */
     vector<vector<int>> ViterbiDecode(XTensor& emissions, XTensor& mask);
-
-    /* de-constructor */
-    ~CRF();
-
 };
 
 /* Return a tensor of elements selected from either x or y, depending on condition. */
 XTensor Where(XTensor& condition, XTensor& x, XTensor& y);
-
-#endif // __CRF_H__

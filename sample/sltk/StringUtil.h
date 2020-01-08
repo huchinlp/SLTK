@@ -15,34 +15,40 @@
  * limitations under the License.
  */
 
-/*
- * $Created by: HU Chi (huchinlp@foxmail.com) 2020-01-03
- */
-
-#ifndef __STRING_UTIL_H__
-#define __STRING_UTIL_H__
+ /*
+  * $Created by: HU Chi (huchinlp@foxmail.com) 2020-01-03
+  */
+#pragma once
 
 #include <string>
 #include <vector>
+#include <utility>
+#include <sstream>
 
 using namespace std;
 
 /* Splits a string based on the given delimiter string. Each pair in the
  * returned vector has the start and past-the-end positions for each of the
- * parts of the original string. Empty fields are not represented in the output.
- */
+ * parts of the original string. Empty fields are not represented in the output. */
 vector<uint64_t> SplitToPos(const string& s, const string& delimiter);
 vector<int64_t> SplitInt(const string& s, const string& delimiter);
 vector<float> SplitFloat(const string& s, const string& delimiter);
 vector<string> SplitString(const string& s, const string& delimiter);
 
-/* concatenate string, int, float... */
-void addToStream(std::ostringstream&);
+/* concat variable parameters to a string */
+inline void AddToStream(ostringstream&) {}
 
 template<typename T, typename... Args>
-void addToStream(std::ostringstream& a_stream, T&& a_value, Args&& ... a_args);
+inline void AddToStream(ostringstream& a_stream, T&& a_value, Args&& ... a_args)
+{
+    a_stream << forward<T>(a_value);
+    AddToStream(a_stream, forward<Args>(a_args)...);
+}
 
 template<typename... Args>
-std::string concat(Args&& ... a_args);
-
-#endif // __STRING_UTIL_H__
+inline string ConcatString(Args&& ... a_args)
+{
+    ostringstream s;
+    AddToStream(s, forward<Args>(a_args)...);
+    return s.str();
+}

@@ -1,13 +1,10 @@
-//#include "sample/sltk/SLTKTrainer.h"
-//#include "sample/sltk/SLTKUtility.h"
-#include <fstream>
-#include <iostream>
 #include "model/Model.h"
+#include "sample/sltk/SLTKDataSet.h"
+#include "sample/sltk/SLTKModel.h"
 #include "sample/sltk/StringUtil.h"
 #include "tensor/core/getandset/SetData.h"
-#include "sample/sltk/SLTKDataSet.h"
-
-
+#include <fstream>
+#include <iostream>
 using namespace std;
 using namespace nts;
 
@@ -16,9 +13,22 @@ void testModel()
     Model model;
     model.Register("transition", { 20, 20 }, X_FLOAT);
     model.ToDevice(0);
-    model["transition"]->SetDataRand();
-    model["transition"]->Dump(stderr);
+    model["transition"].SetDataRand();
     model.Dump("model.bin");
+    model.Print();
+}
+
+void testSequenceTagger()
+{
+    int embSize = 1;
+    int hiddenSize = 1;
+    int rnnLayer = 1;
+    int tagNum = 1;
+    SequenceTagger model(rnnLayer, hiddenSize, tagNum, embSize, nullptr, 0., 0., 0.);
+    model.ToDevice(0);
+    model.Dump("model.bin");
+    model.Load("model.bin");
+    model.Print();
 }
 
 void testRead()
@@ -37,9 +47,6 @@ void testRead()
 
 int main(const int argc, const char** argv)
 {
-     
-    //NERMain(argc, argv);
-    testRead();
-
+    testSequenceTagger();
     return 0;
 }

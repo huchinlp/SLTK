@@ -31,20 +31,20 @@ CRF::CRF(int myTagNum, bool myBatchFirst)
 {
     tagNum = myTagNum;
     batchFirst = myBatchFirst;
-    Register("transitions", { tagNum, tagNum }, X_FLOAT);
-    Register("startTransitions", { tagNum, tagNum }, X_FLOAT);
-    Register("stopTransitions", { tagNum, tagNum }, X_FLOAT);
+    Register("Transitions", { tagNum, tagNum }, X_FLOAT);
+    Register("StartTransitions", { tagNum }, X_FLOAT);
+    Register("StopTransitions", { tagNum }, X_FLOAT);
 }
 
 /* initializer */
 void CRF::ResetParams()
 {
-    Get("transitions").SetDataRand(-0.1, 0.1);
-    Get("startTransitions").SetDataRand(-0.1, 0.1);
-    Get("stopTransitions").SetDataRand(-0.1, 0.1);
+    Get("Transitions").SetDataRand(-0.1f, 0.1f);
+    Get("StartTransitions").SetDataRand(-0.1f, 0.1f);
+    Get("StopTransitions").SetDataRand(-0.1f, 0.1f);
 }
 
-/* 
+/*
 decoding
 >>> emissions - the input, if batchFirst (bsz, len, tagNum), else (len, bsz, tagNum)
 >>> mask - the mask, if batchFirst (bsz, len), else (len, bsz)
@@ -65,7 +65,7 @@ XTensor Where(XTensor& condition, XTensor& x, XTensor& y)
     return condition * x + (1 - condition) * y;
 }
 
-/* 
+/*
 viterbi decoding
 >>> emissions - the input, shape: (len, bsz, tagNum)
 >>> mask - the mask, shape: (len, bsz)
@@ -78,7 +78,7 @@ vector<vector<int>> CRF::ViterbiDecode(XTensor& emissions, XTensor& mask)
     XTensor& trans = Get("stopTransitions");
     XTensor& start = Get("startTransitions");
     XTensor& stop = Get("stopTransitions");
-    
+
     /* start transition and first emission, shape: (bsz, tagNum) */
     auto score = stop + emissions[0];
     vector<XTensor> history;
@@ -97,9 +97,8 @@ vector<vector<int>> CRF::ViterbiDecode(XTensor& emissions, XTensor& mask)
     score = score + stop;
     vector<vector<int>> bestTagsList;
     auto seqStops = ReduceSum(mask, 0) - 1;
-    
+
     for (int i = 0; i < bsz; i++) {
-        
         /* get the best tag for the last timestep */
         XTensor bestLastTag;
         XTensor bestLastScore;

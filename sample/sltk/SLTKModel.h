@@ -19,9 +19,9 @@
   * $Created by: HU Chi (huchinlp@foxmail.com)
   */
 
-#ifndef __BLSTM_CRF_MODEL_H__
-#define __BLSTM_CRF_MODEL_H__
+#pragma once
 
+#include <memory>
 #include "SLTKCRF.h"
 #include "SLTKLSTMCell.h"
 #include "SLTKEmbedding.h"
@@ -31,11 +31,22 @@
 
 using namespace nts;
 using namespace std;
-#undef Linear
+
+/* linear model */
+struct Lin :public Model
+{
+    /* constructor */
+    Lin(int inputDim, int outputDim);
+
+    /* forward function */
+    XTensor Forward(XTensor& input);
+};
 
 /* the sequence labeling model */
-struct SequenceTagger: Model
+struct SequenceTagger : Model
 {
+private:
+
     /* dropout rate for input and output */
     float dropout;
 
@@ -49,19 +60,18 @@ struct SequenceTagger: Model
     Embedding* embedding;
 
     /* embeddings to input */
-    shared_ptr<Linear> embedding2NN;
+    shared_ptr<Lin> embedding2NN;
 
     /* RNNs */
     shared_ptr<LSTM> rnns;
 
     /* RNN output to tag */
-    shared_ptr<Linear> rnn2tag;
+    shared_ptr<Lin> rnn2tag;
 
     /* CRF layer */
     shared_ptr<CRF> crf;
 
-    /* vocab for input and tags */
-    Vocab* vocab;
+public:
 
     /* forward function */
     XTensor Forward(XTensor& input);
@@ -70,22 +80,9 @@ struct SequenceTagger: Model
     vector<vector<int>> Predict(XTensor& input, XTensor& mask);
 
     /* constructor */
-    explicit SequenceTagger(int rnnLayer, int hiddenSize,
-                            Vocab* myVocab, Embedding* myEmbedding,
-                            float myDropout, float myWordropout, float myLockedropout);
+    explicit SequenceTagger(int rnnLayer, int hiddenSize, int tagNum, int embSize, Embedding* myEmbedding,
+                            float myDropout = 0.0f, float myWordropout = 0.0f, float myLockedropout = 0.0f);
 
     /* de-constructor */
     ~SequenceTagger();
 };
-
-/* linear model */
-struct Linear :public Model
-{
-    /* constructor */
-    Linear(int inputDim, int outputDim);
-
-    /* forward function */
-    XTensor Forward(XTensor& input);
-};
-
-#endif // __BLSTM_CRF_MODEL_H__

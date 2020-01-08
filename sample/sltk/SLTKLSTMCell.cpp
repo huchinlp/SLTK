@@ -19,7 +19,6 @@
   * $Created by: HU Chi (huchinlp@foxmail.com)
   */
 
-#include <string>
 #include <memory>
 #include "StringUtil.h"
 #include "SLTKLSTMCell.h"
@@ -44,9 +43,9 @@ LSTM::LSTM(int myInputDim, int myHiddenDim, int myLayerNum, bool myBidirectional
     for (int i = 0; i < layerNum * numPerLayer; i++) {
         auto cell = make_shared<LSTMCell>(inputDim, hiddenDim, i);
         cells.push_back(cell);
+        Register("LSTMCell", *cell);
     }
 }
-
 
 LSTM::~LSTM()
 {
@@ -63,8 +62,8 @@ auto GetRange(int size, bool isReversed)
     return range;
 }
 
-/* 
-lstm forward function 
+/*
+lstm forward function
 >>> input - (batchSize, maxLen, inputDim)
 >>> hidden - (batchSize, hiddenDim)
 >>> memory - (batchSize, hiddenDim)
@@ -89,7 +88,6 @@ XTensor LSTM::Forward(XTensor& input, XTensor& hidden, XTensor& memory)
 
     /* iteration of layers */
     for (int i = 0; i < cells.size(); i++) {
-
         XTensor* hiddens = &fwdHiddens;
         isReversed = ((i % 2 == 0) && bidirectional) ? true : false;
         if (isReversed) {
@@ -112,7 +110,7 @@ XTensor LSTM::Forward(XTensor& input, XTensor& hidden, XTensor& memory)
     if (bidirectional)
         return Concatenate(fwdHiddens, bwdHiddens, 2);
     else
-        return fwdHiddens ;
+        return fwdHiddens;
 }
 
 /*
@@ -124,8 +122,9 @@ constructor
 LSTMCell::LSTMCell(int inputDim, int hiddenDim, int index)
 {
     /* register parameters */
-    Register(concat("Weight_H_", index), { inputDim + hiddenDim, hiddenDim * 4 }, X_FLOAT);
-    Register(concat("Bias_H_", index), { hiddenDim }, X_FLOAT);
+    Register(ConcatString("Weight_H_", index), { inputDim + hiddenDim, hiddenDim * 4 }, X_FLOAT);
+    Register(ConcatString("Bias_H_", index), { hiddenDim }, X_FLOAT);
+    Register(ConcatString("Bias_F_", index), { hiddenDim }, X_FLOAT);
 }
 
 /*
@@ -137,14 +136,14 @@ lstm cell forward
 */
 void LSTMCell::Forward(XTensor& x, XTensor& h, XTensor& c, int index)
 {
-    auto weight = Get(concat("Weight_H_", index));
-    auto biasH = Get(concat("Bias_H_", index));
-    auto biasF = Get(concat("Bias_F_", index));
+    auto weight = Get(ConcatString("Weight_H_", index));
+    auto biasH = Get(ConcatString("Bias_H_", index));
+    auto biasF = Get(ConcatString("Bias_F_", index));
 
     /* combine x and h before the transformation */
     XTensor xh = Concatenate(x, h, x.order - 1);
-    XTensor noGated = MatrixMul(xh, *weight);
-    noGated = noGated + *biasH;
+    XTensor noGated = MatrixMul(xh, weight);
+    noGated = noGated + biasH;
 
     /* split the big tensor to 4 parts */
     TensorList splited(4);
@@ -158,7 +157,7 @@ void LSTMCell::Forward(XTensor& x, XTensor& h, XTensor& c, int index)
     /* apply gating to the transformed tensor */
     XTensor g = HardTanH(*j);
     XTensor gatedin = Sigmoid(*i) * g;
-    XTensor memory = h * Sigmoid(*f + *biasF);
+    XTensor memory = h * Sigmoid(*f + biasF);
 
     /* update memory state and hidden state */
     c = memory + gatedin;

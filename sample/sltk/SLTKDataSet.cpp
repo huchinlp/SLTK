@@ -31,8 +31,9 @@
 using namespace std;
 
 /* compare two length (descending) */
-bool cmp(pair<int, int>& a, pair<int, int>& b) {  
-    return (a.first - a.second) < (b.first - b.second); 
+bool cmp(pair<int, int>& a, pair<int, int>& b)
+{
+    return (a.first - a.second) < (b.first - b.second);
 };
 
 /*
@@ -105,7 +106,7 @@ void DataSet::LoadFromFile(const string& src)
     int pos = 0;
     std::string str((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
     auto sentences = SplitString(str, "\n\n");
-    
+
     /* convert tokens to ids */
     for (auto& sent : sentences) {
         auto lines = SplitString(sent, "\n");
@@ -118,13 +119,11 @@ void DataSet::LoadFromFile(const string& src)
             pos++;
         }
     }
-    
+
     /* sort index by length (descending) */
     sort(indices.begin(), indices.end(), cmp);
     bufferSize = indices.size();
 }
-
-
 
 /*
 load 'field' batches from the buffer
@@ -177,15 +176,14 @@ pair<int*, int> DataSet::Locate(int index, int field)
     return { buffers[field] + indices[index].first, fieldLen };
 }
 
-
 /* reset index of the current data entry */
 void DataSet::Reset()
 {
     cur = 0;
 }
 
-/* 
-constructor 
+/*
+constructor
 >>> myDev - device id
 >>> myShuffle - shuffle the data or not
 */

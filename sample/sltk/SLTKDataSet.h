@@ -19,8 +19,7 @@
  * $Created by: HU Chi (huchinlp@foxmail.com) 2020-01-03
  */
 
-#ifndef __DATASET_H__
-#define __DATASET_H__
+#pragma once
 
 #include <cstdio>
 #include <unordered_map>
@@ -96,5 +95,3 @@ public:
 
 /* compare two length (descending) */
 bool cmp(pair<int, int>& a, pair<int, int>& b);
-
-#endif // __DATASET_H__

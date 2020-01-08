@@ -26,14 +26,15 @@
 #ifndef __MODEL_H__
 #define __MODEL_H__
 
+#include <vector>
+#include <string>
 #include <utility>
+#include "ReflectStruct.h"
 #include "../tensor/XGlobal.h"
 #include "../tensor/XTensor.h"
-#include <string>
-using namespace std;
 
-/* the nts (NiuTrans.Tensor) namespace */
-namespace nts {
+using namespace std;
+using namespace nts;
 
 using Dim = std::initializer_list<int>;
 
@@ -42,7 +43,7 @@ struct Parameter {
 
 public:
     /* the parameter list */
-    TensorList list;
+    vector<XTensor*> list;
 
 public:
     /* add a parameter to the list */
@@ -74,9 +75,14 @@ public:
     /* register a parameter with a unique name */
     void Register(const string& name, Dim dims, TENSOR_DATA_TYPE dataType);
 
+    /* register a module */
+    void Register(const string& prefix, const Model& module);
+
+    /* print all parameters */
+    void Print();
+
+    /* load the model on device */
     void ToDevice(int devID);
 };
-
-}
 
 #endif // __MODEL_H__

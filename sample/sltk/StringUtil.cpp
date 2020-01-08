@@ -15,18 +15,18 @@
  * limitations under the License.
  */
 
-/*
-* $Created by: HU Chi (huchinlp@foxmail.com) 2020-01-03
-*/
+ /*
+ * $Created by: HU Chi (huchinlp@foxmail.com) 2020-01-03
+ */
 
 #include "StringUtil.h"
 
-/* 
-split string by delimiter, this will return indices of all sub-strings
->>> s - the original string
->>> delimiter - as it is
->>> a - the indices of all sub-strings
-*/
+ /*
+ split string by delimiter, this will return indices of all sub-strings
+ >>> s - the original string
+ >>> delimiter - as it is
+ >>> a - the indices of all sub-strings
+ */
 vector<uint64_t> SplitToPos(const string& s, const string& delimiter)
 {
     vector<uint64_t> indices;
@@ -75,26 +75,8 @@ vector<string> SplitString(const string& s, const string& delimiter)
     vector<string> values;
     auto indices = SplitToPos(s, delimiter);
     for (int i = 0; i < indices.size(); i++) {
-        auto offset = (i != (indices.size() - 1)) ? indices[i + 1] - indices[i] -delimiter.size() : s.size() - indices[i];
+        auto offset = (i != (indices.size() - 1)) ? indices[i + 1] - indices[i] - delimiter.size() : s.size() - indices[i];
         values.push_back(s.substr(indices[i], offset));
     }
     return values;
-}
-
-/* concat variable parameters to a string */
-void addToStream(std::ostringstream&) {}
-
-template<typename T, typename... Args>
-void addToStream(std::ostringstream& a_stream, T&& a_value, Args&&... a_args)
-{
-    a_stream << std::forward<T>(a_value);
-    addToStream(a_stream, std::forward<Args>(a_args)...);
-}
-
-template<typename... Args>
-std::string concat(Args&&... a_args)
-{
-    std::ostringstream s;
-    addToStream(s, std::forward<Args>(a_args)...);
-    return s.str();
 }

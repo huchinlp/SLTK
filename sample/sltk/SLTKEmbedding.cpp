@@ -24,7 +24,6 @@
 
 using namespace std;
 
-
 /*
 load pre-trained embeddings from file
 >>> fn - the pre-trained embeddings file

@@ -19,13 +19,12 @@
   * $Created by: HU Chi (huchinlp@foxmail.com)
   */
 
-#ifndef __LSTM_CELL_H__
-#define __LSTM_CELL_H__
+#pragma once
 
-
+#include <vector>
+#include <memory>
 #include "../../model/Model.h"
 
-using namespace nts;
 using namespace std;
 
 /* lstm cell */
@@ -41,7 +40,6 @@ struct LSTMCell : public Model
 /* lstm struct */
 struct LSTM : public Model
 {
-
     /* input dim */
     int inputDim;
 
@@ -65,7 +63,4 @@ struct LSTM : public Model
 
     /* forward */
     XTensor Forward(XTensor& input, XTensor& hidden, XTensor& memory);
-
 };
-
-#endif // __LSTM_CELL_H__
