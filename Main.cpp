@@ -20,14 +20,13 @@ void testModel()
 
 void testSequenceTagger()
 {
-    int embSize = 1;
-    int hiddenSize = 1;
+    int embSize = 400;
+    int hiddenSize = 256;
     int rnnLayer = 1;
-    int tagNum = 1;
-    SequenceTagger model(rnnLayer, hiddenSize, tagNum, embSize, nullptr, 0., 0., 0.);
+    int tagNum = 29;
+    SequenceTagger model(rnnLayer, hiddenSize, tagNum, embSize, nullptr);
     model.ToDevice(0);
-    model.Dump("model.bin");
-    model.Load("model.bin");
+    model.Load("params.bin");
     model.Print();
 }
 
@@ -43,6 +42,7 @@ void testRead()
         input->Dump(stderr);
         target->Dump(stderr);
     }
+    
 }
 
 int main(const int argc, const char** argv)
