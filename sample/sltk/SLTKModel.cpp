@@ -24,7 +24,7 @@
 #include "SLTKModel.h"
 #include "StringUtil.h"
 
-XTensor SequenceTagger::Forward(XTensor& sentences)
+XTensor SequenceTagger::Forward(const XTensor& sentences)
 {
     XTensor hidden;
     XTensor memory;
@@ -91,7 +91,7 @@ Lin::Lin(int inputDim, int outputDim)
 }
 
 /* forward function */
-XTensor Lin::Forward(XTensor& input)
+XTensor Lin::Forward(const XTensor& input)
 {
     return MatrixMul(input, Get("Weight")) + Get("Bias");
 }

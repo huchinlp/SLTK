@@ -63,8 +63,8 @@ public:
     /* load a model from a binary file */
     void Load(const char* fn);
 
-    /* dump the model to a binary file */
-    void Dump(const char* fn);
+    /* save the model to a binary file */
+    void Save(const char* fn);
 
     /* get a parameter by its name */
     XTensor& Get(const string& name);

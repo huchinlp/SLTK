@@ -30,7 +30,7 @@ namespace nts { // namespace nts(NiuTrans.Tensor)
 void _TopK(const XTensor * a, XTensor * b, XTensor * index, int dim, int k);
 
 /* get the top-k items along a given dimension */
-void TopK(XTensor &a, XTensor &b, XTensor &index, int dim, int k);
+void TopK(const XTensor &a, XTensor &b, XTensor &index, int dim, int k);
 
 } // namespace nts(NiuTrans.Tensor)
 

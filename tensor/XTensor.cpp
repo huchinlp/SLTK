@@ -326,7 +326,7 @@ void XTensor::ShallowCopy(const XTensor &tensor)
 }
 
 /* overloading of the select function */
-XTensor& XTensor::operator[](int index)
+XTensor XTensor::operator[](int index)
 {
     int low = 0;
     int high = dimSize[index] - 1;

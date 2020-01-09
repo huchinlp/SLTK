@@ -12,8 +12,7 @@ void Model::Register(const string& name, Dim dims, TENSOR_DATA_TYPE dataType)
 void Model::Register(const string& prefix, const Model& module)
 {
     for (auto p : module.parameters.list) {
-        auto dim = initializer_list<int>(p->dimSize, p->dimSize + p->order);
-        parameters.AddParameter(ConcatString(prefix, ".", p->name), dim, p->dataType);
+        parameters.list.push_back(p);
     }
 }
 
@@ -68,12 +67,12 @@ void Model::Load(const char* fn)
 }
 
 /* dump a model to a binary file */
-void Model::Dump(const char* fn)
+void Model::Save(const char* fn)
 {
     FILE* file = fopen(fn, "wb");
 
     /* dump number of parameter */
-    unsigned long int number = parameters.list.size();
+    size_t number = parameters.list.size();
     fwrite(&number, sizeof(number), 1, file);
 
     /* dump offset of parameters */

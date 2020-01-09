@@ -47,7 +47,7 @@ void Embedding::LoadWordEmbeddings(const char* fn, int myDevID)
 set embeddings for a mini-batch
 >>> input - the input tensor
 */
-XTensor Embedding::Embed(XTensor& input)
+XTensor Embedding::Embed(const XTensor& input)
 {
     return Gather(vec, input);
 }

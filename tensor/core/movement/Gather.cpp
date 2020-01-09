@@ -38,7 +38,7 @@ gather indexed sub-tensors
 e.g., for a tensor of size (3, 2, 4) and dim = 2,
 we have 4 sub-tensors of size (3, 2)
 */
-void _Gather(const XTensor * s, XTensor * t, XTensor * srcIndex, int dim)
+void _Gather(const XTensor * s, XTensor * t, const XTensor * srcIndex, int dim)
 {
     CheckNTErrors((s && t), "Invalid tensors!");
     CheckNTErrors(s->devID == t->devID, "the data must be kept on the same device!");
@@ -58,7 +58,7 @@ gather indexed sub-tensors
 >> t - the target tensor
 >> srcIndex - the tensor to save the index of the source tensor
 */
-void _Gather(const XTensor * s, XTensor * t, XTensor * srcIndex)
+void _Gather(const XTensor * s, XTensor * t, const XTensor * srcIndex)
 {
     CheckNTErrors((s && t), "Invalid tensors!");
     CheckNTErrors(s->devID == t->devID, "the data must be kept on the same device!");
@@ -96,7 +96,7 @@ make a new tensor to keep the result and return it
 >> index - the index tensor
 << return - the result of gather indexed sub-tensors
 */
-XTensor Gather(XTensor &s, XTensor &index)
+XTensor Gather(const XTensor &s, const XTensor &index)
 {
     int dim = 0;
 

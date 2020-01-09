@@ -61,4 +61,4 @@ public:
 };
 
 /* Return a tensor of elements selected from either x or y, depending on condition. */
-XTensor Where(XTensor& condition, XTensor& x, XTensor& y);
+XTensor Where(const XTensor& condition, const XTensor& x, const XTensor& y);

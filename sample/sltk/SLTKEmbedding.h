@@ -44,5 +44,5 @@ struct Embedding
     void LoadWordEmbeddings(const char* fn, int myDevID);
 
     /* gather embeddings for the input */
-    XTensor Embed(XTensor& input);
+    XTensor Embed(const XTensor& input);
 };

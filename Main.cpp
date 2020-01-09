@@ -14,7 +14,7 @@ void testModel()
     model.Register("transition", { 20, 20 }, X_FLOAT);
     model.ToDevice(0);
     model["transition"].SetDataRand();
-    model.Dump("model.bin");
+    model.Save("model.bin");
     model.Print();
 }
 
@@ -26,6 +26,7 @@ void testSequenceTagger()
     int tagNum = 29;
     SequenceTagger model(rnnLayer, hiddenSize, tagNum, embSize, nullptr);
     model.ToDevice(0);
+    model.Save("params.bin");
     model.Load("params.bin");
     model.Print();
 }

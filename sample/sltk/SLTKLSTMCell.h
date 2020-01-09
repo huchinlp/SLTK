@@ -34,7 +34,7 @@ struct LSTMCell : public Model
     LSTMCell(int inputDim, int hiddenDim, int index);
 
     /* lstm forward function in a cell */
-    void Forward(XTensor& x, XTensor& h, XTensor& c, int index);
+    void Forward(const XTensor& x, XTensor& h, XTensor& c, int index);
 };
 
 /* lstm struct */
@@ -58,9 +58,9 @@ struct LSTM : public Model
     /* constructor */
     LSTM(int inputDim, int hiddenDim, int layerNum, bool bidirectional);
 
-    /* de-constructor */
-    ~LSTM();
-
     /* forward */
-    XTensor Forward(XTensor& input, XTensor& hidden, XTensor& memory);
+    XTensor Forward(const XTensor& input, XTensor& hidden, XTensor& memory);
 };
+
+/* generate a range of number */
+vector<int> GetRange(int size, bool isReversed);

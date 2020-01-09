@@ -20,6 +20,7 @@
   */
 
 #include <memory>
+#include <algorithm>
 #include "StringUtil.h"
 #include "SLTKLSTMCell.h"
 #include "../../tensor/core/CHeader.h"
@@ -39,7 +40,9 @@ LSTM::LSTM(int myInputDim, int myHiddenDim, int myLayerNum, bool myBidirectional
     hiddenDim = myHiddenDim;
     layerNum = myLayerNum;
     bidirectional = myBidirectional;
+
     int numPerLayer = bidirectional ? 2 : 1;
+
     for (int i = 0; i < layerNum * numPerLayer; i++) {
         auto cell = make_shared<LSTMCell>(inputDim, hiddenDim, i);
         cells.push_back(cell);
@@ -47,12 +50,8 @@ LSTM::LSTM(int myInputDim, int myHiddenDim, int myLayerNum, bool myBidirectional
     }
 }
 
-LSTM::~LSTM()
-{
-}
-
 /* generate a range of number */
-auto GetRange(int size, bool isReversed)
+vector<int> GetRange(int size, bool isReversed)
 {
     vector<int> range;
     for (int i = 0; i < size; i++)
@@ -69,7 +68,7 @@ lstm forward function
 >>> memory - (batchSize, hiddenDim)
 <<< hiddens - (batchSize, maxLen, hiddenDim (x2 if bidirectional is true))
 */
-XTensor LSTM::Forward(XTensor& input, XTensor& hidden, XTensor& memory)
+XTensor LSTM::Forward(const XTensor& input, XTensor& hidden, XTensor& memory)
 {
     TensorList list;
     Split(input, 1, input.GetDim(1));
@@ -134,7 +133,7 @@ lstm cell forward
 >>> c - memory state, (batchSize, hiddenDim)
 >>> index - the index of lstm parameters
 */
-void LSTMCell::Forward(XTensor& x, XTensor& h, XTensor& c, int index)
+void LSTMCell::Forward(const XTensor& x, XTensor& h, XTensor& c, int index)
 {
     auto weight = Get(ConcatString("Weight_H_", index));
     auto biasH = Get(ConcatString("Bias_H_", index));

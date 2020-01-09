@@ -27,14 +27,14 @@
 namespace nts { // namespace nts(NiuTrans.Tensor)
 
 /* gather selected sub-tensors */
-void _Gather(const XTensor * s, XTensor * t, XTensor * srcIndex);
+void _Gather(const XTensor * s, XTensor * t, const XTensor * srcIndex);
 
 /* gather selected sub-tensors accoding to the dimension */
-void _Gather(const XTensor * s, XTensor * t, XTensor * srcIndex, int dim);
+void _Gather(const XTensor * s, XTensor * t, const XTensor * srcIndex, int dim);
 
 /* gather selected sub-tensors (return an XTensor structure)
    make a new tensor to keep the result and return it */
-XTensor Gather(XTensor &s, XTensor &index);
+XTensor Gather(const XTensor &s, const XTensor &index);
 
 } // namespace nts(NiuTrans.Tensor)
 

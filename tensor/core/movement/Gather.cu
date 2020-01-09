@@ -101,7 +101,7 @@ gather indexed sub-tensors(cuda version)
 >> t - the target tensor
 >> srcIndex - the tensor to save the index of the source tensor
 */
-void _CudaGather(const XTensor * s, XTensor * t, XTensor * srcIndex)
+void _CudaGather(const XTensor * s, XTensor * t, const XTensor * srcIndex)
 {
     int devID = s->devID;
     XMem * mem = s->mem;
@@ -154,7 +154,7 @@ gather indexed sub-tensors(cuda version)
 >> srcIndex - the tensor to save the index of the source tensor
 >> dim - the leading dimension to define "sub-tensors"
 */
-void _CudaGather(const XTensor * s, XTensor * t, XTensor * srcIndex, int dim)
+void _CudaGather(const XTensor * s, XTensor * t, const XTensor * srcIndex, int dim)
 {
     int devID = srcIndex->devID;
     XMem * mem = s->mem;

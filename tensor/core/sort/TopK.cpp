@@ -117,7 +117,7 @@ get the top-k items along a given dimension
 >> dim - the dimension along which the sorting is performed
 >> k - how many items returned after sorting
 */
-void TopK(XTensor &a, XTensor &b, XTensor &index, int dim, int k)
+void TopK(const XTensor &a, XTensor &b, XTensor &index, int dim, int k)
 {
     dim = MODX(dim, a.order);
     

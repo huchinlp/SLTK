@@ -39,7 +39,7 @@ struct Lin :public Model
     Lin(int inputDim, int outputDim);
 
     /* forward function */
-    XTensor Forward(XTensor& input);
+    XTensor Forward(const XTensor& input);
 };
 
 /* the sequence labeling model */
@@ -74,7 +74,7 @@ private:
 public:
 
     /* forward function */
-    XTensor Forward(XTensor& input);
+    XTensor Forward(const XTensor& input);
 
     /* predict tags */
     vector<vector<int>> Predict(XTensor& input, XTensor& mask);

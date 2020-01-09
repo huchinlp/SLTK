@@ -19,6 +19,7 @@
  * $Created by: HU Chi (huchinlp@foxmail.com)
  */
 
+#include <algorithm>
 #include "SLTKCRF.h"
 #include "../../tensor/core/CHeader.h"
 
@@ -60,7 +61,7 @@ vector<vector<int>> CRF::Decode(XTensor& emissions, XTensor& mask)
 }
 
 /* Return a tensor of elements selected from either x or y, depending on condition. */
-XTensor Where(XTensor& condition, XTensor& x, XTensor& y)
+XTensor Where(const XTensor& condition, const XTensor& x, const XTensor& y)
 {
     return condition * x + (1 - condition) * y;
 }
