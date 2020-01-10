@@ -33,16 +33,17 @@ CRF::CRF(int myTagNum, bool myBatchFirst)
     tagNum = myTagNum;
     batchFirst = myBatchFirst;
     Register("Transitions", { tagNum, tagNum }, X_FLOAT);
-    Register("StartTransitions", { tagNum }, X_FLOAT);
-    Register("StopTransitions", { tagNum }, X_FLOAT);
+    Register("StartTransitions", { tagNum + 1 }, X_FLOAT);
+    Register("StopTransitions", { tagNum + 1 }, X_FLOAT);
+    ResetParams();
 }
 
 /* initializer */
 void CRF::ResetParams()
 {
     Get("Transitions").SetDataRand(-0.1f, 0.1f);
-    Get("StartTransitions").SetDataRand(-0.1f, 0.1f);
-    Get("StopTransitions").SetDataRand(-0.1f, 0.1f);
+    SetDataFixed(Get("StartTransitions"), -1e4);
+    SetDataFixed(Get("StopTransitions"), -1e4);
 }
 
 /*
@@ -112,7 +113,7 @@ vector<vector<int>> CRF::ViterbiDecode(XTensor& emissions, XTensor& mask)
             bestTags.push_back(bestLastTag.Get1DInt(0));
         }
 
-        /* reverse the 'best last tags' */
+        /* reverse the best last tags */
         reverse(bestTags.begin(), bestTags.end());
         bestTagsList.push_back(bestTags);
     }

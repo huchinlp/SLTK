@@ -1,6 +1,7 @@
 #include <vector>
 #include "Model.h"
 #include "../sample/sltk/StringUtil.h"
+#include <iostream>
 
 /* register a parameter with a unique name */
 void Model::Register(const string& name, Dim dims, TENSOR_DATA_TYPE dataType)
@@ -12,6 +13,8 @@ void Model::Register(const string& name, Dim dims, TENSOR_DATA_TYPE dataType)
 void Model::Register(const string& prefix, const Model& module)
 {
     for (auto p : module.parameters.list) {
+        string newName = prefix + "." + p->name;
+        strcpy(p->name, newName.c_str());
         parameters.list.push_back(p);
     }
 }
@@ -19,14 +22,21 @@ void Model::Register(const string& prefix, const Model& module)
 /* print all parameters */
 void Model::Print()
 {
+    ostringstream msg;
+    size_t totalParams = 0;
     for (const auto& p:parameters.list) {
         auto shape = vector<int>(p->dimSize, p->dimSize+p->order);
-        printf("%s shape: (", p->name);
+        msg << p->name << " shape: (";
+        size_t params = 1;
         for (int s : shape) {
-            printf("%d,", s);
+            msg  << s << ",";
+            params *= s;
         }
-        printf(")\n");
+        totalParams += params;
+        msg << ")\n";
     }
+    cout << "total parameters: " << parameters.list.size() << " size: " << totalParams << "\n";
+    cout << msg.str();
 }
 
 /* set devices for all parameters */
@@ -43,25 +53,31 @@ XTensor& Model::operator[](const char* name)
     return Get(name);
 }
 
-/* load a model from a binary file */
+/* 
+load a model from a binary file 
+a model file consists of three. parts:
+part 1: number of offsets, int64_t
+part 2: offsets of parameters, int64_t
+part 3: parameters, float32_t
+*/
 void Model::Load(const char* fn)
 {
     CheckNTErrors(parameters.list.size() > 0, "empty tensor list");
 
     FILE* file = fopen(fn, "rb");
-    LongList offset(parameters.list.size());
+    vector<int64_t> offsets(parameters.list.size());
 
     /* check number of parameter */
-    unsigned long int number;
+    int64_t number;
     fread(&number, sizeof(number), 1, file);
     CheckNTErrors(number == parameters.list.size(), "parameter number not matched");
 
     /* read parameter offsets from the file */
-    fread(offset.items, sizeof(long), offset.Size(), file);
+    fread(&offsets[0], sizeof(offsets[0]), offsets.size(), file);
 
     /* read parameters from the file */
-    for (int i = 0; i < offset.Size(); i++) {
-        parameters.list[i]->BinaryRead(file, offset[i]);
+    for (int i = 0; i < offsets.size(); i++) {
+        parameters.list[i]->BinaryRead(file, offsets[i]);
     }
     fclose(file);
 }
@@ -72,15 +88,13 @@ void Model::Save(const char* fn)
     FILE* file = fopen(fn, "wb");
 
     /* dump number of parameter */
-    size_t number = parameters.list.size();
+    int64_t number = parameters.list.size();
     fwrite(&number, sizeof(number), 1, file);
 
     /* dump offset of parameters */
-    unsigned long int offset = sizeof(number);
-    for (int i = 0; i < parameters.list.size(); i++) {
-        if (i > 0) {
-            offset += parameters.list[i - 1]->unitNum;
-        }
+    int64_t offset = 0;
+    for (const auto& p:parameters.list) {
+        offset = p->unitNum;
         fwrite(&offset, sizeof(offset), 1, file);
     }
 
@@ -106,7 +120,7 @@ void Parameter::AddParameter(const string& name, Dim dims, TENSOR_DATA_TYPE data
     for (int i : dims) {
         dim.Add(i);
     }
-    XTensor* p = NewTensorV2(dims.size(), dim.items, dataType);
+    XTensor* p = NewTensorV2(int(dims.size()), dim.items, dataType);
     strcpy(p->name, name.c_str());
     list.push_back(p);
 }

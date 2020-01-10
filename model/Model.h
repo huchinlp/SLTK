@@ -29,7 +29,6 @@
 #include <vector>
 #include <string>
 #include <utility>
-#include "ReflectStruct.h"
 #include "../tensor/XGlobal.h"
 #include "../tensor/XTensor.h"
 

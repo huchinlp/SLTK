@@ -121,9 +121,10 @@ constructor
 LSTMCell::LSTMCell(int inputDim, int hiddenDim, int index)
 {
     /* register parameters */
-    Register(ConcatString("Weight_H_", index), { inputDim + hiddenDim, hiddenDim * 4 }, X_FLOAT);
-    Register(ConcatString("Bias_H_", index), { hiddenDim }, X_FLOAT);
-    Register(ConcatString("Bias_F_", index), { hiddenDim }, X_FLOAT);
+    Register(ConcatString("Weight_IH_", index), { inputDim, hiddenDim * 4 }, X_FLOAT);
+    Register(ConcatString("Weight_HH_", index), { hiddenDim, hiddenDim * 4 }, X_FLOAT);
+    Register(ConcatString("Bias_IH_", index), { hiddenDim * 4 }, X_FLOAT);
+    Register(ConcatString("Bias_HH_", index), { hiddenDim * 4 }, X_FLOAT);
 }
 
 /*
@@ -135,30 +136,26 @@ lstm cell forward
 */
 void LSTMCell::Forward(const XTensor& x, XTensor& h, XTensor& c, int index)
 {
-    auto weight = Get(ConcatString("Weight_H_", index));
-    auto biasH = Get(ConcatString("Bias_H_", index));
-    auto biasF = Get(ConcatString("Bias_F_", index));
+    auto weightIH = Get(ConcatString("Weight_IH_", index));
+    auto weightHH = Get(ConcatString("Weight_HH_", index));
+    auto biasIH = Get(ConcatString("Bias_IH_", index));
+    auto biasHH = Get(ConcatString("Bias_HH_", index));
 
-    /* combine x and h before the transformation */
-    XTensor xh = Concatenate(x, h, x.order - 1);
-    XTensor noGated = MatrixMul(xh, weight);
-    noGated = noGated + biasH;
+    /* transformations */
+    XTensor noGated = MatrixMul(x, weightIH) + MatrixMul(h, weightHH) + biasIH + biasHH;
 
     /* split the big tensor to 4 parts */
     TensorList splited(4);
     Split(noGated, splited, noGated.order - 1, 4);
 
     XTensor* i = splited[0];
-    XTensor* j = splited[0];
-    XTensor* f = splited[0];
-    XTensor* o = splited[0];
+    XTensor* f = splited[1];
+    XTensor* g = splited[2];
+    XTensor* o = splited[3];
 
     /* apply gating to the transformed tensor */
-    XTensor g = HardTanH(*j);
-    XTensor gatedin = Sigmoid(*i) * g;
-    XTensor memory = h * Sigmoid(*f + biasF);
 
     /* update memory state and hidden state */
-    c = memory + gatedin;
+    c = Sigmoid(*f) * c + Sigmoid(*i) * HardTanH(*g);
     h = HardTanH(c) * Sigmoid(*o);
 }

@@ -1902,7 +1902,6 @@ read data from a binary file
 */
 void XTensor::BinaryRead(FILE* file, size_t offset)
 {
-    fseek(file, offset, 0);
     switch (dataType) {
     case X_INT: {
         int * d = new int[unitNum];

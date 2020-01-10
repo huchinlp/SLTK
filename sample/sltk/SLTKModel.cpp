@@ -69,7 +69,7 @@ SequenceTagger::SequenceTagger(int rnnLayer, int hiddenSize, int tagNum, int emb
 
     embedding2NN = make_shared<Lin>(embSize, embSize);
 
-    rnn2tag = make_shared<Lin>(hiddenSize * 2, tagNum);
+    rnn2tag = make_shared<Lin>(hiddenSize * 2, tagNum+1);
 
     const auto prefix = "SequenceTagger.";
     Register(ConcatString(prefix, "CRF"), *crf);

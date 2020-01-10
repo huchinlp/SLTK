@@ -3,7 +3,7 @@ NIUTRANS_EXE := NiuTensor
 
 # code path and generated file path
 ROOT = .
-SRC = $(ROOT)/source
+SRC = $(ROOT)/src
 LIB_DIR = $(ROOT)/lib
 EXE_DIR = $(ROOT)/bin
 
@@ -18,7 +18,7 @@ OnMac = 0
 # 1 - use GPU
 USE_CUDA = 1
 # modify this path if neccessary
-CUDA_ROOT = /usr/local/cuda9
+CUDA_ROOT = /home/huchi/cuda9
 CUDA_LIB_DIR = $(CUDA_ROOT)/lib64
 CUDA_INCLUDE = $(CUDA_ROOT)/include
 
