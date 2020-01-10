@@ -21,6 +21,7 @@
 
 #pragma once
 
+#include "SLTKDataSet.h"
 #include "../../tensor/XTensor.h"
 #include "../../tensor/XGlobal.h"
 
@@ -37,8 +38,11 @@ struct Embedding
     /* the embedding dimension */
     int embSize;
 
+    /* dictionary */
+    shared_ptr<Vocab> vocab;
+
     /* the pre-trained word embeddings */
-    XTensor vec;
+    XTensor vecs;
 
     /* load embeddings from a file */
     void LoadWordEmbeddings(const char* fn, int myDevID);

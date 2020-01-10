@@ -31,16 +31,16 @@ load pre-trained embeddings from file
 >>> myDevID - the device id
 */
 void Embedding::LoadWordEmbeddings(const char* fn, int myDevID)
-{
+{+
     devID = myDevID;
     FILE* f = fopen(fn, "rb");
 
     fread(&vocabSize, sizeof(vocabSize), 1, f);
     fread(&embSize, sizeof(embSize), 1, f);
 
-    InitTensor2DV2(&vec, vocabSize, embSize, X_FLOAT, -1);
-    fread(vec.data, sizeof(float), vec.unitNum, f);
-    vec.SetDevice(devID);
+    InitTensor2DV2(&vecs, vocabSize, embSize, X_FLOAT, -1);
+    fread(vecs.data, sizeof(float), vecs.unitNum, f);
+    vecs.SetDevice(devID);
 }
 
 /*
@@ -49,5 +49,5 @@ set embeddings for a mini-batch
 */
 XTensor Embedding::Embed(const XTensor& input)
 {
-    return Gather(vec, input);
+    return Gather(vecs, input);
 }

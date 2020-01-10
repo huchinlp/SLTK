@@ -22,6 +22,7 @@
 #pragma once
 
 #include <cstdio>
+#include <memory>
 #include <unordered_map>
 #include "../../tensor/XTensor.h"
 
@@ -37,14 +38,16 @@ struct Dict
 /* the vocabulary class that supports variable fileds */
 struct Vocab
 {
-    int fields;
-    vector<int> vocabSizes;
-    size_t tokenNumber;
+    int vocabSize;
 
-    vector<unordered_map<string, int>> word2IDs;
-    vector<unordered_map<int, string>> id2Words;
+    unordered_map<string, int> word2id;
+    unordered_map<int, string> id2word;
 
-    Vocab(const char* src);
+    /* load a vocabulary from a file */
+    void Load(const char* src);
+
+    /* save a vocabulary to a file */
+    void Save(const char* src);
 };
 
 /* the dataset class for sequence labeling */
@@ -52,7 +55,7 @@ class DataSet
 {
 private:
     /* vocabulary for tokens and tags */
-    Vocab* vocab;
+    vector<shared_ptr<Vocab>> vocabs;
 
     /* tokens and tags */
     vector<int*> buffers;
@@ -74,6 +77,9 @@ private:
 
     /* get the position of an example by its field and index */
     pair<int*, int> Locate(int index, int field);
+
+    /* get the length of a file */
+    size_t GetSize(const string& src);
 
     /* reset index of the current data entry */
     void Reset();

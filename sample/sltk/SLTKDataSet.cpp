@@ -36,76 +36,26 @@ bool cmp(pair<int, int>& a, pair<int, int>& b)
     return (a.first - a.second) < (b.first - b.second);
 };
 
-/*
-build the vocabulary from a file
-format (one token per line):
-token tag1 tag2 ...
-*/
-Vocab::Vocab(const char* src)
-{
-    tokenNumber = 0;
-    ifstream f(src, ios::in);
-
-    vector<string> preDefinedTokens = { "<PAD>" };
-    int startID = int(preDefinedTokens.size());
-
-    /* get all sentences */
-    std::string str((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
-    auto sentences = SplitString(str, "\n\n");
-
-    /* get the number of fields */
-    fields = int(SplitString(sentences[0], "\n").size());
-    for (int i = 0; i < fields; i++) {
-        word2IDs.push_back(unordered_map<string, int>());
-        id2Words.push_back(unordered_map<int, string>());
-    }
-    vector<int> idx;
-    for (int i = 0; i < word2IDs.size(); i++) {
-        idx.push_back(int(preDefinedTokens.size()));
-    }
-
-    /* assign indices to tokens and tags */
-    for (auto& sent : sentences) {
-        auto lines = SplitString(sent, "\n");
-        tokenNumber += lines.size();
-        for (auto& line : lines) {
-            auto tokens = SplitString(line, " ");
-            for (size_t i = 0; i < tokens.size(); i++) {
-                auto token = tokens[i];
-                if (word2IDs[i].find(token) == word2IDs[i].end()) {
-                    word2IDs[i][token] = idx[i];
-                    id2Words[i][idx[i]++] = token;
-                }
-            }
-        }
-    }
-
-    /* add pre-defined tokens to the dict */
-    for (int n = 0; n < word2IDs.size(); n++) {
-        vocabSizes.push_back(int(word2IDs[n].size()));
-        for (int i = 0; i < preDefinedTokens.size(); i++) {
-            word2IDs[n][preDefinedTokens[i]] = i;
-            id2Words[n][i] = preDefinedTokens[i];
-        }
-    }
-}
-
 /* load data from column-format file */
 void DataSet::LoadFromFile(const string& src)
 {
-    vocab = new Vocab(src.c_str());
-
-    for (int i = 0; i < vocab->fields; i++) {
-        int* buffer = new int[vocab->tokenNumber];
-        buffers.push_back(buffer);
-    }
-
     ifstream f(src, ios::in);
 
     /* read tokens */
     int pos = 0;
     std::string str((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
     auto sentences = SplitString(str, "\n\n");
+
+    size_t tokenNumber = 0;
+    for (const auto& s : sentences) {
+        tokenNumber += s.size();
+    }
+
+    /* allocate buffers */
+    for (int i = 0; i < vocabs.size(); i++) {
+        int* buffer = new int[tokenNumber];
+        buffers.push_back(buffer);
+    }
 
     /* convert tokens to ids */
     for (auto& sent : sentences) {
@@ -114,7 +64,7 @@ void DataSet::LoadFromFile(const string& src)
         for (auto& line : lines) {
             auto tokens = SplitString(line, " ");
             for (size_t i = 0; i < tokens.size(); i++) {
-                buffers[i][pos] = vocab->word2IDs[i].at(tokens[i]);
+                buffers[i][pos] = vocabs[i]->word2id.at(tokens[i]);
             }
             pos++;
         }
@@ -148,10 +98,10 @@ void DataSet::LoadBatch(TensorList& list, int batchSize)
 
     /* load data to batches */
     int maxLen = (indices[cur].second - indices[cur].first);
-    for (int n = 0; n < vocab->fields; n++) {
+    for (int n = 0; n < vocabs.size(); n++) {
         XTensor* batch = NewTensor2DV2(bsz, int(maxLen), X_INT, devID);
         int* data = new int[batch->unitNum];
-        fill_n(data, batch->unitNum, vocab->word2IDs[n].at("<PAD>"));
+        fill_n(data, batch->unitNum, vocabs[n]->word2id.at("<PAD>"));
         for (int i = 0; i < bsz; i++) {
             auto pos = Locate(cur + i, n);
             copy_n(pos.first, pos.second, data + i * maxLen);
@@ -171,7 +121,7 @@ get the position of an example by its field and index
 */
 pair<int*, int> DataSet::Locate(int index, int field)
 {
-    CheckNTErrors(vocab->fields > field, "invalid field");
+    CheckNTErrors(vocabs.size() > field, "invalid field");
     int fieldLen = indices[index].second - indices[index].first;
     return { buffers[field] + indices[index].first, fieldLen };
 }
@@ -194,13 +144,32 @@ DataSet::DataSet(int myDev, bool myShuffle, const string& src)
     LoadFromFile(src);
 }
 
-/* de-constructor */
-DataSet::~DataSet()
+/* load a vocabulary from a file */
+void Vocab::Load(const char* src)
 {
-    for (int i = 0; i < buffers.size(); i++) {
-        delete buffers[i];
+    string line;
+    ifstream f(src, ios::in);
+    
+    /* get the vocab size */
+    f >> line;
+    vocabSize = stoll(line);
+
+    for (int i = 0; i < vocabSize; i++) {
+        string word, id;
+        f >> word >> id;
+        word2id[word] = stoll(id);
+        id2word[stoll(id)] = word;
     }
-    if (vocab != nullptr) {
-        delete vocab;
+    f.close();
+}
+
+/* save a vocabulary to a file */
+void Vocab::Save(const char* src)
+{
+    ofstream f(src, ios::out);
+    f << vocabSize;
+    for (auto p : word2id) {
+        f << p.first << "\t" << p.second;
     }
+    f.close();
 }
