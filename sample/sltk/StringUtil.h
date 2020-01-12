@@ -52,3 +52,6 @@ inline string ConcatString(Args&& ... a_args)
     AddToStream(s, forward<Args>(a_args)...);
     return s.str();
 }
+
+/* string transformation */
+vector<string> Transform(const string& str);

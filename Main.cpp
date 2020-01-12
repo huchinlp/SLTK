@@ -5,6 +5,7 @@
 #include "tensor/core/getandset/SetData.h"
 #include <fstream>
 #include <iostream>
+#include <memory>
 using namespace std;
 using namespace nts;
 
@@ -29,39 +30,38 @@ bool Exists(const char* file)
     }
 }
 
-void testSequenceTagger()
+shared_ptr<SequenceTagger> BuildModel(const int argc, const char** argv)
 {
+    int devID = 0;
     int embSize = 400;
     int hiddenSize = 256;
     int rnnLayer = 1;
     int tagNum = 28;
-    SequenceTagger model(rnnLayer, hiddenSize, tagNum, embSize, nullptr);
-    model.ToDevice(0);
-    model["SequenceTagger.RNN2Tag.Bias"].SetZeroAll();
-    SetDataFixed(model["SequenceTagger.RNN2Tag.Bias"], 1.0);
-    model.Load("wnut17.bin");
-    model.Print();
-    /*model["SequenceTagger.Embedding2NN.Bias"].Dump(stderr);*/
-    model["SequenceTagger.RNN2Tag.Bias"].Dump(stderr);
-}
 
-void testRead()
-{
-    DataSet dataSet(0, false, "file.txt");
-    int batchSize = 2;
-    for (auto i = 0; i < dataSet.bufferSize; i += batchSize) {
-        TensorList list;
-        dataSet.LoadBatch(list, batchSize);
-        auto input = list[0];
-        auto target = list[1];
-        input->Dump(stderr);
-        target->Dump(stderr);
-    }
-    
+    auto embeddings = make_shared<Embedding>(devID);
+    embeddings->Load("wnut17.emb");
+    //embeddings->LoadWordEmbedding({"wnut17crawl", "wnut17twitter"});
+    //embeddings->LoadPretrainedLM({"news-forward", "news-backward"});
+
+    auto model = make_shared<SequenceTagger>(rnnLayer, hiddenSize, tagNum, embSize, embeddings);
+    model->Load("wnut17.bin");
+    model->ToDevice(0);
+
+    return model;
 }
 
 int main(const int argc, const char** argv)
 {
-    testSequenceTagger();
+    auto model = BuildModel(argc, argv);
+    DataSet dataSet("test.txt");
+    int batchSize = 24;
+    for (auto i = 0; i < dataSet.bufferSize; i += batchSize) {
+        /* input sequences */
+        auto src = dataSet.LoadBatch(batchSize);
+
+        /* label sequences */
+        auto labels = model->Predict(src[0]);
+        model.DumpResult("res.txt");
+    }
     return 0;
 }

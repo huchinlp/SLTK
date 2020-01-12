@@ -39,14 +39,23 @@ struct Embedding
     int embSize;
 
     /* dictionary */
-    shared_ptr<Vocab> vocab;
+    shared_ptr<Vocab> embVocab;
 
     /* the pre-trained word embeddings */
     XTensor vecs;
 
     /* load embeddings from a file */
-    void LoadWordEmbeddings(const char* fn, int myDevID);
+    void LoadWordEmbeddings(const Vocab& vocab, const string& fn, int myDevID);
 
     /* gather embeddings for the input */
+    XTensor Embed(const XTensor& input);
+};
+
+struct StackEmbedding
+{
+    /* stack of multiple embeddings */
+    vector<Embedding*> staticEmbeddings;
+
+    /* get embeddings */
     XTensor Embed(const XTensor& input);
 };

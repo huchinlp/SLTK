@@ -20,6 +20,7 @@
  */
 
 #include "StringUtil.h"
+#include <algorithm>
 
  /*
  split string by delimiter, this will return indices of all sub-strings
@@ -79,4 +80,29 @@ vector<string> SplitString(const string& s, const string& delimiter)
         values.push_back(s.substr(indices[i], offset));
     }
     return values;
+}
+
+/* string transformation */
+vector<string> Transform(const string& src)
+{
+    /* get the lower string */
+    string lower;
+    lower.resize(src.size());
+    std::transform(src.begin(), src.end(), lower.begin(), tolower);
+
+    /* remove blanks */
+    string noBlanks;
+    for (auto c : src) {
+        if (c != ' ')
+            noBlanks += c;
+    }
+
+    /* remove special characters */
+    string noSpecials;
+    for (auto c : src) {
+        if (c != '#')
+            noSpecials += c;
+    }
+
+    return vector<string>{lower, noBlanks, noSpecials};
 }

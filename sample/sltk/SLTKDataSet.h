@@ -29,6 +29,11 @@
 using namespace std;
 using namespace nts;
 
+constexpr int UNK = 0;
+constexpr int PAD = 1;
+constexpr int SOS = 2;
+constexpr int EOS = 3;
+
 struct Dict
 {
     string word;
@@ -43,11 +48,20 @@ struct Vocab
     unordered_map<string, int> word2id;
     unordered_map<int, string> id2word;
 
+    /* constructor, merge two vocabs into one */
+    Vocab(Vocab& bigVocab,Vocab& smallVocab);
+
+    /* constructor, load a vocab from a file */
+    Vocab(const string& src);
+
     /* load a vocabulary from a file */
-    void Load(const char* src);
+    void Load(const string& src);
 
     /* save a vocabulary to a file */
-    void Save(const char* src);
+    void Save(const string& src);
+
+    /* merge from another vocab */
+    void Merge(Vocab& smallVocab);
 };
 
 /* the dataset class for sequence labeling */
@@ -78,9 +92,6 @@ private:
     /* get the position of an example by its field and index */
     pair<int*, int> Locate(int index, int field);
 
-    /* get the length of a file */
-    size_t GetSize(const string& src);
-
     /* reset index of the current data entry */
     void Reset();
 
@@ -93,7 +104,7 @@ public:
     void LoadBatch(TensorList& list, int batchSize);
 
     /* constructor */
-    DataSet(int myDev, bool myShuffle, const string& src);
+    DataSet(const string& src, bool myShuffle = false);
 
     /* de-constructor */
     ~DataSet();

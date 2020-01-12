@@ -137,19 +137,18 @@ constructor
 >>> myDev - device id
 >>> myShuffle - shuffle the data or not
 */
-DataSet::DataSet(int myDev, bool myShuffle, const string& src)
+DataSet::DataSet(const string& src, bool myShuffle)
 {
-    devID = myDev;
     isShuffled = myShuffle;
     LoadFromFile(src);
 }
 
 /* load a vocabulary from a file */
-void Vocab::Load(const char* src)
+void Vocab::Load(const string& src)
 {
     string line;
     ifstream f(src, ios::in);
-    
+
     /* get the vocab size */
     f >> line;
     vocabSize = stoll(line);
@@ -164,7 +163,7 @@ void Vocab::Load(const char* src)
 }
 
 /* save a vocabulary to a file */
-void Vocab::Save(const char* src)
+void Vocab::Save(const string& src)
 {
     ofstream f(src, ios::out);
     f << vocabSize;
@@ -172,4 +171,30 @@ void Vocab::Save(const char* src)
         f << p.first << "\t" << p.second;
     }
     f.close();
+}
+
+/* constructor */
+Vocab::Vocab(const string& src)
+{
+    Load(src);
+}
+
+/* constructor, merge two vocabs into one */
+Vocab::Vocab(Vocab& textVocab, Vocab& embVocab)
+{
+    auto InVocab = [](const auto p) { return bigVocab.word2id.find(p.first) != bigVocab.word2id.end(); };
+    for (const auto p : textVocab.word2id) {
+        if (embVocab.word2id.find(p.first) == word2id.end()) {
+            auto newWords = Transform(p.first);
+            if (none_of(newWords.begin(), newWords.end(), InVocab)) {
+                word2id[p.first] = UNK;
+            }
+            else {
+                word2id[p.first] = p.second;
+            }
+        }
+        else {
+            word2id[p.first] = p.second;
+        }
+    }
 }
