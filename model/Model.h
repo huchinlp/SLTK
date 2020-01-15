@@ -23,10 +23,10 @@
 *
 */
 
-#ifndef __MODEL_H__
-#define __MODEL_H__
+#pragma once
 
 #include <vector>
+#include <memory>
 #include <string>
 #include <utility>
 #include "../tensor/XGlobal.h"
@@ -42,20 +42,27 @@ struct Parameter {
 
 public:
     /* the parameter list */
-    vector<XTensor*> list;
+    vector<shared_ptr<XTensor>> paramList;
+
+    /* the name list for parameters */
+    vector<string> nameList;
 
 public:
     /* add a parameter to the list */
     void AddParameter(const string& name, Dim dims, TENSOR_DATA_TYPE dataType);
 
     /* get a parameter by its name */
-    XTensor* GetParameter(const string& name);
+    shared_ptr<XTensor> GetParameter(const string& name);
 };
 
 /* Model is a base class for neural networks */
 struct Model {
 
 public:
+    /* device id */
+    int devID;
+
+    /* model parameters */
     Parameter parameters;
 
 public:
@@ -66,10 +73,10 @@ public:
     void Save(const char* fn);
 
     /* get a parameter by its name */
-    XTensor& Get(const string& name);
+    shared_ptr<XTensor> Get(const string& name);
 
     /* get a parameter by its name */
-    XTensor& operator[] (const char* name);
+    shared_ptr<XTensor> operator[] (const string& name);
 
     /* register a parameter with a unique name */
     void Register(const string& name, Dim dims, TENSOR_DATA_TYPE dataType);
@@ -83,5 +90,3 @@ public:
     /* load the model on device */
     void ToDevice(int devID);
 };
-
-#endif // __MODEL_H__

@@ -48,49 +48,28 @@ struct Vocab
     unordered_map<string, int> word2id;
     unordered_map<int, string> id2word;
 
-    /* constructor, merge two vocabs into one */
-    Vocab(Vocab& bigVocab,Vocab& smallVocab);
-
-    /* constructor, load a vocab from a file */
-    Vocab(const string& src);
-
     /* load a vocabulary from a file */
     void Load(const string& src);
 
     /* save a vocabulary to a file */
     void Save(const string& src);
-
-    /* merge from another vocab */
-    void Merge(Vocab& smallVocab);
 };
 
 /* the dataset class for sequence labeling */
 class DataSet
 {
 private:
-    /* vocabulary for tokens and tags */
-    vector<shared_ptr<Vocab>> vocabs;
-
     /* tokens and tags */
-    vector<int*> buffers;
+    vector<vector<string>> buffers;
 
     /* current index for batching */
     int cur = 0;
 
-    /* device id */
-    int devID = 0;
-
     /* use shuffled batch or not */
     bool isShuffled = false;
 
-    /* indices for sentences */
-    vector<pair<int, int>> indices;
-
     /* load dataset from a text file (column-fomat) */
     void LoadFromFile(const string& src);
-
-    /* get the position of an example by its field and index */
-    pair<int*, int> Locate(int index, int field);
 
     /* reset index of the current data entry */
     void Reset();
@@ -100,14 +79,11 @@ public:
     /* buffer size */
     size_t bufferSize;
 
-    /* load a list of batches from the buffer */
-    void LoadBatch(TensorList& list, int batchSize);
+    /* load a batch of sentences from the buffer */
+    vector<vector<string>> LoadBatch(int batchSize);
 
     /* constructor */
     DataSet(const string& src, bool myShuffle = false);
-
-    /* de-constructor */
-    ~DataSet();
 };
 
 /* compare two length (descending) */

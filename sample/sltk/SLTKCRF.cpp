@@ -41,9 +41,9 @@ CRF::CRF(int myTagNum, bool myBatchFirst)
 /* initializer */
 void CRF::ResetParams()
 {
-    Get("Transitions").SetDataRand(-0.1f, 0.1f);
-    SetDataFixed(Get("StartTransitions"), -1e4);
-    SetDataFixed(Get("StopTransitions"), -1e4);
+    Get("Transitions")->SetDataRand(-0.1f, 0.1f);
+    SetDataFixed(*Get("StartTransitions"), -1e4);
+    SetDataFixed(*Get("StopTransitions"), -1e4);
 }
 
 /*
@@ -52,11 +52,12 @@ decoding
 >>> mask - the mask, if batchFirst (bsz, len), else (len, bsz)
 <<< the best tag sequence, (bsz, len)
 */
-vector<vector<int>> CRF::Decode(XTensor& emissions, XTensor& mask)
+vector<vector<int>> CRF::Decode(const XTensor& emissions, const XTensor& mask)
 {
     if (batchFirst) {
-        emissions = Transpose(emissions, 0, 1);
-        mask = Transpose(mask, 0, 1);
+        auto e = Transpose(emissions, 0, 1);
+        auto m = Transpose(mask, 0, 1);
+        return ViterbiDecode(e, m);
     }
     return ViterbiDecode(emissions, mask);
 }
@@ -73,22 +74,22 @@ viterbi decoding
 >>> mask - the mask, shape: (len, bsz)
 <<< the best tag sequence, shape: (bsz, len)
 */
-vector<vector<int>> CRF::ViterbiDecode(XTensor& emissions, XTensor& mask)
+vector<vector<int>> CRF::ViterbiDecode(const XTensor& emissions, const XTensor& mask)
 {
     int bsz = emissions.GetDim(1);
     int seqLen = emissions.GetDim(0);
-    XTensor& trans = Get("stopTransitions");
-    XTensor& start = Get("startTransitions");
-    XTensor& stop = Get("stopTransitions");
+    auto trans = Get("stopTransitions");
+    auto start = Get("startTransitions");
+    auto stop = Get("stopTransitions");
 
     /* start transition and first emission, shape: (bsz, tagNum) */
-    auto score = stop + emissions[0];
+    XTensor score = *stop + emissions[0];
     vector<XTensor> history;
 
     for (int i = 1; i < seqLen; i++) {
-        auto broadcastScore = Unsqueeze(score, 2);
-        auto broadcastEmission = Unsqueeze(emissions[i], 1);
-        auto nextScore = broadcastScore + trans + broadcastEmission;
+        XTensor broadcastScore = Unsqueeze(score, 2);
+        XTensor broadcastEmission = Unsqueeze(emissions[i], 1);
+        XTensor nextScore = broadcastScore + *trans + broadcastEmission;
         XTensor indices;
         TopK(nextScore, nextScore, indices, 1, 1);
         score = Where(mask[i], nextScore, score);
@@ -96,7 +97,7 @@ vector<vector<int>> CRF::ViterbiDecode(XTensor& emissions, XTensor& mask)
     }
 
     /* stop transition score */
-    score = score + stop;
+    score = score + *stop;
     vector<vector<int>> bestTagsList;
     auto seqStops = ReduceSum(mask, 0) - 1;
 

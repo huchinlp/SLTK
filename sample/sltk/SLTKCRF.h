@@ -54,10 +54,10 @@ public:
     void ResetParams();
 
     /* decoder */
-    vector<vector<int>> Decode(XTensor& emissions, XTensor& mask);
+    vector<vector<int>> Decode(const XTensor& emissions, const XTensor& mask);
 
     /* viterbi decoder */
-    vector<vector<int>> ViterbiDecode(XTensor& emissions, XTensor& mask);
+    vector<vector<int>> ViterbiDecode(const XTensor& emissions, const XTensor& mask);
 };
 
 /* Return a tensor of elements selected from either x or y, depending on condition. */

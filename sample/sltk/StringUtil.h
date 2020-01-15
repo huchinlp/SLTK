@@ -55,3 +55,10 @@ inline string ConcatString(Args&& ... a_args)
 
 /* string transformation */
 vector<string> Transform(const string& str);
+
+/* load arguments */
+void ShowParams(int argc, const char** argv);
+int LoadParamInt(int argc, const char** argv, const char* name, int defaultP);
+bool LoadParamBool(int argc, const char** argv, const char* name, bool defaultP);
+float LoadParamFloat(int argc, const char** argv, const char* name, float defaultP);
+const char* LoadParamString(int argc, const char** argv, const char* name, const char* defaultP);

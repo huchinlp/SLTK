@@ -21,11 +21,14 @@
 
 #pragma once
 
+#include <initializer_list>
 #include "SLTKDataSet.h"
 #include "../../tensor/XTensor.h"
 #include "../../tensor/XGlobal.h"
 
+
 using namespace nts;
+using namespace std;
 
 struct Embedding
 {
@@ -33,29 +36,62 @@ struct Embedding
     int devID;
 
     /* the vocab size */
-    int vocabSize;
+    size_t vocabSize;
 
     /* the embedding dimension */
-    int embSize;
+    size_t embSize;
 
-    /* dictionary */
-    shared_ptr<Vocab> embVocab;
+    /* the vocabulary of the embeddings */
+    Vocab embVocab;
 
     /* the pre-trained word embeddings */
-    XTensor vecs;
+    XTensor vec;
 
-    /* load embeddings from a file */
-    void LoadWordEmbeddings(const Vocab& vocab, const string& fn, int myDevID);
+    /* constructor */
+    explicit Embedding(int myDevID, const char* embFile);
 
-    /* gather embeddings for the input */
-    XTensor Embed(const XTensor& input);
+    /* load embeddings from files */
+    void LoadWordEmbedding(const char* file);
+
+    /* set word embeddings for a batch of sentences */
+    XTensor Embed(const vector<vector<string>>& input);
+};
+
+struct LanguageModel
+{
+    /* device id */
+    int devID;
+
+    /* input size */
+    int inSize;
+
+    /* output size */
+    int outSize;
+
+    /* constructor */
+    LanguageModel(int myDevID, const char* file);
+
+    /* load pretrained LM from files */
+    void LoadPretrainedLM(const char* file);
+
+    /* get the contextual representation of inputs */
+    void GetRepresentation(const vector<vector<string>>& input);
 };
 
 struct StackEmbedding
 {
+public:
+    int devID;
+
     /* stack of multiple embeddings */
     vector<Embedding*> staticEmbeddings;
 
-    /* get embeddings */
-    XTensor Embed(const XTensor& input);
+    /* get embeddings of inputs */
+    XTensor Embed(const vector<vector<string>>& input);
+
+    /* constructor */
+    StackEmbedding(int myDevID, vector<const char*> files);
+
+    /* de-constructor */
+    ~StackEmbedding();
 };

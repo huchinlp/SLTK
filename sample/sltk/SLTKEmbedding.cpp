@@ -19,79 +19,117 @@
   * $Created by: HU Chi (huchinlp@foxmail.com) 2020.01.02
   */
 
+#include "StringUtil.h"
 #include "SLTKEmbedding.h"
 #include "../../tensor/core/CHeader.h"
-
-using namespace std;
+#include <iostream>
 
 /*
 load pre-trained embeddings from file
->>> fn - the pre-trained embeddings file
->>> embSize - the embedding dimension
->>> myDevID - the device id
+>>> file - the pre-trained embeddings file
 */
-void Embedding::LoadWordEmbeddings(const Vocab& textVocab, const string& fn, int myDevID)
+void Embedding::LoadWordEmbedding(const char* file)
 {
-    devID = myDevID;
-
     /* load embeddings vocab */
-    embVocab = make_shared<Vocab>((fn+".vocab").c_str());
-    
+    embVocab.Load(ConcatString(file, ".vocab"));
+
     /* load embeddings */
-    FILE* embFile = fopen(fn.c_str(), "rb");
+    FILE* embFile = fopen(file, "rb");
     fread(&vocabSize, sizeof(vocabSize), 1, embFile);
     fread(&embSize, sizeof(embSize), 1, embFile);
 
-    vector<float*> buffers;
-    for (int i = 0; i < vocabSize; i++) {
-        float* buffer = new float[embSize];
-        buffers.push_back(buffer);
-        fread(buffer, sizeof(float), embSize, embFile);
-    }
-
-    /* trim and reorder embeddings */
-    vector<float*> newBuffers;
-    embVocab = make_shared<Vocab>(textVocab, embVocab);
-    int newIdx = 1;
-    for (auto& p : embVocab->word2id) {
-        newBuffers.push_back(buffers[p.second]);
-        p.second = newIdx++;
-    }
-
-    /* combine embeddings */
-    vocabSize = embVocab->word2id.size();
-    float* data = new float[vocabSize];
-
-    for (int i = 0; i < vocabSize;i++) {
-        copy(newBuffers[i], newBuffers[i] + embSize, data + i * embSize);
-    }
-    InitTensor2DV2(&vecs, vocabSize, embSize, X_FLOAT, devID);
-    vecs.SetData(data, vecs.unitNum);
-
-    /* free buffers */
-    for (auto p : buffers) {
-        delete[] p;
-    }
-    delete[] data;
+    InitTensor2DV2(&vec, vocabSize, embSize, X_FLOAT, devID);
+    vec.BinaryRead(embFile, vocabSize * embSize);
+    fclose(embFile);
 }
 
 /*
-set embeddings for a mini-batch
->>> input - the input tensor
+constructor
+>>> myDevID - device
+>>> file - the pre-trained embeddings file
 */
-XTensor Embedding::Embed(const XTensor& input)
+Embedding::Embedding(int myDevID, const char* file)
 {
-    return Gather(vecs, input);
+    devID = myDevID;
+
+    LoadWordEmbedding(file);
 }
 
-/* get embeddings */
-XTensor StackEmbedding::Embed(const XTensor& input)
+/*
+set word embeddings for a batch of sentences
+>>> input - the input sentences
+*/
+XTensor Embedding::Embed(const vector<vector<string>>& input)
 {
-    TensorList list;
-    vector<XTensor> embeddings;
-    for (auto emb : staticEmbeddings) {
-        embeddings.push_back(emb->Embed(input));
-        list.Add(&(embeddings.back()));
+    XTensor idx;
+    int bsz = input.size();
+    int maxLen = 0;
+    for (const auto sent : input)
+        maxLen = max(maxLen, int(sent.size()));
+    InitTensor2DV2(&idx, bsz, maxLen, X_INT, devID);
+    
+    int* indices = new int[bsz * maxLen];
+    memset(indices, 0, sizeof(int) * bsz * maxLen);
+    for (int i = 0; i < bsz; i++) {
+        for (int j = 0; j < input[i].size(); j++) {
+            if (embVocab.word2id.find(input[i][j]) != embVocab.word2id.end())
+                indices[i * maxLen + j] = embVocab.word2id[input[i][j]];
+        }
     }
-    return Concatenate(list, embeddings.back().GetDim(-1));
+    idx.SetData(indices, bsz * maxLen);
+    delete[] indices;
+
+    return Gather(vec, idx);
+}
+
+/* get embeddings of the inputs */
+XTensor StackEmbedding::Embed(const vector<vector<string>>& input)
+{
+    auto emb = staticEmbeddings[0]->Embed(input);
+    for (int i = 1; i < staticEmbeddings.size();i++) {
+        emb = Concatenate(emb, staticEmbeddings[i]->Embed(input), 2);
+    }
+
+    return emb;
+}
+
+/* 
+constructor 
+>>> myDevID - device
+>>> files - a list of pre-trained embedding files
+*/
+StackEmbedding::StackEmbedding(int myDevID, vector<const char*> files)
+{
+    devID = myDevID;
+    for (auto file : files)
+        staticEmbeddings.push_back(new Embedding(devID, file));
+}
+
+/* de-constructor */
+StackEmbedding::~StackEmbedding()
+{
+    for (auto emb : staticEmbeddings)
+        delete emb;
+}
+
+/* load pretrained LM from files */
+void LanguageModel::LoadPretrainedLM(const char* file)
+{
+}
+
+/* get the contextual representation of inputs */
+void LanguageModel::GetRepresentation(const vector<vector<string>>& input)
+{
+}
+
+/*
+constructor
+>>> myDevID - device
+>>> file - the pre-trained embeddings file
+*/
+LanguageModel::LanguageModel(int myDevID, const char* file)
+{
+    devID = myDevID;
+
+    LoadPretrainedLM(file);
 }

@@ -58,9 +58,12 @@ struct LSTM : public Model
     /* constructor */
     LSTM(int inputDim, int hiddenDim, int layerNum, bool bidirectional);
 
-    /* forward */
-    XTensor Forward(const XTensor& input, XTensor& hidden, XTensor& memory);
+    /* lstm forward function */
+    XTensor Forward(const XTensor& input);
 };
 
 /* generate a range of number */
 vector<int> GetRange(int size, bool isReversed);
+
+/* split a big tensor into small ones */
+void Split(const XTensor& big, vector<XTensor*>& list, int dim);

@@ -57,7 +57,7 @@ private:
     float lockedDropout;
 
     /* embedding */
-    Embedding* embedding;
+    shared_ptr<StackEmbedding> embedding;
 
     /* embeddings to input */
     shared_ptr<Lin> embedding2NN;
@@ -74,13 +74,20 @@ private:
 public:
 
     /* forward function */
-    XTensor Forward(const XTensor& input);
+    XTensor Forward(const vector<vector<string>>& input);
+
+    /* get the mask of sentences */
+    XTensor GetMask(const vector<vector<string>>& input);
 
     /* predict tags */
-    vector<vector<int>> Predict(XTensor& input, XTensor& mask);
+    vector<vector<int>> Predict(const vector<vector<string>>& input);
+
+    /* dump input sequences and label sequences to a file */
+    void DumpResult(vector<vector<string>>& src, vector<vector<string>>& tgt, const char* file);
 
     /* constructor */
-    explicit SequenceTagger(int rnnLayer, int hiddenSize, int tagNum, int embSize, Embedding* myEmbedding,
+    explicit SequenceTagger(int myDevID, int rnnLayer, int hiddenSize, 
+                            int tagNum, int embSize, shared_ptr<StackEmbedding> myEmbedding,
                             float myDropout = 0.0f, float myWordropout = 0.0f, float myLockedropout = 0.0f);
 
     /* de-constructor */

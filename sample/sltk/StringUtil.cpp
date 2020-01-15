@@ -106,3 +106,89 @@ vector<string> Transform(const string& src)
 
     return vector<string>{lower, noBlanks, noSpecials};
 }
+
+
+/* utilities for loading arguments */
+const char* LoadParamString(int argc, const char** argv, const char* name, const char* defaultP)
+{
+    char vname[128];
+    vname[0] = '-';
+    strcpy(vname + 1, name);
+    bool hit = false;
+    for (int i = 0; i < argc; i++) {
+        if (!strcmp(argv[i], vname) && i + 1 < argc) {
+            return argv[i + 1];
+            //fprintf(stderr, " %s=%s\n", name, argv[i + 1]);
+            hit = true;
+        }
+    }
+    if (!hit)
+        return defaultP;
+}
+
+int LoadParamInt(int argc, const char** argv, const char* name, int defaultP)
+{
+    char vname[128];
+    vname[0] = '-';
+    strcpy(vname + 1, name);
+    bool hit = false;
+    for (int i = 0; i < argc; i++) {
+        if (!strcmp(argv[i], vname) && i + 1 < argc) {
+            return atoi(argv[i + 1]);
+            //fprintf(stderr, " %s=%s\n", name, argv[i + 1]);
+            hit = true;
+        }
+    }
+    if (!hit)
+        return defaultP;
+}
+
+bool LoadParamBool(int argc, const char** argv, const char* name, bool defaultP)
+{
+    char vname[128];
+    vname[0] = '-';
+    strcpy(vname + 1, name);
+    bool hit = false;
+    for (int i = 0; i < argc; i++) {
+        if (!strcmp(argv[i], vname)) {
+            return true;
+            //fprintf(stderr, " %s=%s\n", name, "true");
+            hit = true;
+        }
+    }
+    if (!hit)
+        return defaultP;
+}
+
+float LoadParamFloat(int argc, const char** argv, const char* name, float defaultP)
+{
+    char vname[128];
+    vname[0] = '-';
+    strcpy(vname + 1, name);
+    bool hit = false;
+    for (int i = 0; i < argc; i++) {
+        if (!strcmp(argv[i], vname) && i + 1 < argc) {
+            return ( float) atof(argv[i + 1]);
+            //fprintf(stderr, " %s=%s\n", name, argv[i + 1]);
+            hit = true;
+        }
+    }
+    if (!hit)
+        return defaultP;
+}
+
+void ShowParams(int argc, const char** argv)
+{
+    fprintf(stderr, "args:\n");
+    for (int i = 0; i < argc; i++) {
+        if (argv[i][1] == 0)
+            continue;
+        if (argv[i][0] == '-' && (argv[i][1] < '1' || argv[i][1] > '9')) {
+            if (i + 1 < argc && argv[i + 1][0] != '-')
+                fprintf(stderr, " %s=%s\n", argv[i], argv[i + 1]);
+            else
+                fprintf(stderr, " %s=yes\n", argv[i]);
+        }
+    }
+    fprintf(stderr, "\n");
+}
