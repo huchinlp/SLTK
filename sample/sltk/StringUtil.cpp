@@ -15,19 +15,19 @@
  * limitations under the License.
  */
 
- /*
+/*
  * $Created by: HU Chi (huchinlp@foxmail.com) 2020-01-03
  */
 
 #include "StringUtil.h"
 #include <algorithm>
 
- /*
- split string by delimiter, this will return indices of all sub-strings
- >>> s - the original string
- >>> delimiter - as it is
- >>> a - the indices of all sub-strings
- */
+/*
+split string by delimiter, this will return indices of all sub-strings
+>>> s - the original string
+>>> delimiter - as it is
+>>> a - the indices of all sub-strings
+*/
 vector<uint64_t> SplitToPos(const string& s, const string& delimiter)
 {
     vector<uint64_t> indices;
@@ -107,7 +107,6 @@ vector<string> Transform(const string& src)
     return vector<string>{lower, noBlanks, noSpecials};
 }
 
-
 /* utilities for loading arguments */
 const char* LoadParamString(int argc, const char** argv, const char* name, const char* defaultP)
 {
@@ -152,7 +151,6 @@ bool LoadParamBool(int argc, const char** argv, const char* name, bool defaultP)
     for (int i = 0; i < argc; i++) {
         if (!strcmp(argv[i], vname)) {
             return true;
-            //fprintf(stderr, " %s=%s\n", name, "true");
             hit = true;
         }
     }
@@ -169,7 +167,6 @@ float LoadParamFloat(int argc, const char** argv, const char* name, float defaul
     for (int i = 0; i < argc; i++) {
         if (!strcmp(argv[i], vname) && i + 1 < argc) {
             return ( float) atof(argv[i + 1]);
-            //fprintf(stderr, " %s=%s\n", name, argv[i + 1]);
             hit = true;
         }
     }

@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
- /*
-  * $Created by: HU Chi (huchinlp@foxmail.com)
-  */
+/*
+ * $Created by: HU Chi (huchinlp@foxmail.com)
+ */
 
 #pragma once
 
@@ -64,6 +64,3 @@ struct LSTM : public Model
 
 /* generate a range of number */
 vector<int> GetRange(int size, bool isReversed);
-
-/* split a big tensor into small ones */
-void Split(const XTensor& big, vector<XTensor*>& list, int dim);

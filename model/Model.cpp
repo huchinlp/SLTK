@@ -12,9 +12,9 @@ void Model::Register(const string& name, Dim dims, TENSOR_DATA_TYPE dataType)
 /* register a module */
 void Model::Register(const string& prefix, const Model& module)
 {
-    for (auto p : module.parameters.paramList) {
-        string name = prefix + "." + p->name;
-        parameters.paramList.push_back(p);
+    for (int i = 0; i < module.parameters.paramList.size();i++) {
+        string name = prefix + "." + module.parameters.nameList[i];
+        parameters.paramList.push_back(module.parameters.paramList[i]);
         parameters.nameList.emplace_back(name);
     }
 }

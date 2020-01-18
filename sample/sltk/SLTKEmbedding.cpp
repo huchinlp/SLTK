@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
- /*
-  * $Created by: HU Chi (huchinlp@foxmail.com) 2020.01.02
-  */
+/*
+ * $Created by: HU Chi (huchinlp@foxmail.com) 2020.01.02
+ */
 
 #include "StringUtil.h"
 #include "SLTKEmbedding.h"
@@ -67,7 +67,7 @@ XTensor Embedding::Embed(const vector<vector<string>>& input)
     for (const auto sent : input)
         maxLen = max(maxLen, int(sent.size()));
     InitTensor2DV2(&idx, bsz, maxLen, X_INT, devID);
-    
+
     int* indices = new int[bsz * maxLen];
     memset(indices, 0, sizeof(int) * bsz * maxLen);
     for (int i = 0; i < bsz; i++) {
@@ -86,15 +86,14 @@ XTensor Embedding::Embed(const vector<vector<string>>& input)
 XTensor StackEmbedding::Embed(const vector<vector<string>>& input)
 {
     auto emb = staticEmbeddings[0]->Embed(input);
-    for (int i = 1; i < staticEmbeddings.size();i++) {
+    for (int i = 1; i < staticEmbeddings.size(); i++) {
         emb = Concatenate(emb, staticEmbeddings[i]->Embed(input), 2);
     }
-
     return emb;
 }
 
-/* 
-constructor 
+/*
+constructor
 >>> myDevID - device
 >>> files - a list of pre-trained embedding files
 */

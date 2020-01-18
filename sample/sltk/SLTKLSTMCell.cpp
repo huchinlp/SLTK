@@ -15,24 +15,25 @@
  * limitations under the License.
  */
 
- /*
-  * $Created by: HU Chi (huchinlp@foxmail.com)
-  */
+/*
+ * $Created by: HU Chi (huchinlp@foxmail.com)
+ */
 
 #include <memory>
 #include <algorithm>
 #include "StringUtil.h"
+#include "SLTKNNUtil.h"
 #include "SLTKLSTMCell.h"
 #include "../../tensor/core/CHeader.h"
 #include "../../tensor/function/FHeader.h"
 
-  /*
-  constructor
-  >>> inputDim - the input size of lstm
-  >>> hiddenDim - the hidden size of lstm
-  >>> layerNum - the number of layers
-  >>> bidirectional - use bi-lstm or not
-  */
+/*
+constructor
+>>> inputDim - the input size of lstm
+>>> hiddenDim - the hidden size of lstm
+>>> layerNum - the number of layers
+>>> bidirectional - use bi-lstm or not
+*/
 LSTM::LSTM(int myInputDim, int myHiddenDim, int myLayerNum, bool myBidirectional)
 {
     /* register parameters */
@@ -61,24 +62,6 @@ vector<int> GetRange(int size, bool isReversed)
     return range;
 }
 
-/* split a big tensor into small ones */
-void Split(const XTensor& big, vector<XTensor*>& list, int dim)
-{
-    TensorList l;
-    int num = big.GetDim(dim);
-    int* dimSize = new int[big.order - 1];
-    for (int i = 0; i < dim; i++)
-        dimSize[i] = big.dimSize[i];
-    for (int i = 0; i < big.order - dim - 1; i++)
-        dimSize[dim + i] = big.dimSize[dim + i + 1];
-
-    for (int i = 0; i < num; i++) {
-        l.Add(NewTensorV2(big.order - 1, dimSize, big.dataType, big.denseRatio, big.devID));
-        list.push_back(l[i]);
-    }
-    Split(big, l, dim, num);
-}
-
 /*
 lstm forward function
 >>> input - (batchSize, maxLen, inputDim)
@@ -86,7 +69,7 @@ lstm forward function
 */
 XTensor LSTM::Forward(const XTensor& input)
 {
-    vector<XTensor*> timeSteps;
+    TensorList timeSteps;
     Split(input, timeSteps, 1);
 
     bool isReversed = false;
@@ -144,9 +127,6 @@ XTensor LSTM::Forward(const XTensor& input)
             }
         }
     }
-
-    for (auto t : timeSteps)
-        DelTensor(t);
     if (bidirectional)
         return Concatenate(fwdHiddens, bwdHiddens, 2);
     else
@@ -187,8 +167,8 @@ void LSTMCell::Forward(const XTensor& x, XTensor& h, XTensor& c, int index)
 
     /* split the big tensor to 4 parts */
     TensorList splited;
-    XTensor i, f, g, o;
-    for (auto p : { &i, &f, &g, &o }) {
+    XTensor i, f, o, g;
+    for (auto p : { &i, &f, &o, &g }) {
         InitTensorV2(p, &h);
         splited.Add(p);
     }

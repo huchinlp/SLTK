@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
- /*
-  * $Created by: HU Chi (huchinlp@foxmail.com)
-  */
+/*
+ * $Created by: HU Chi (huchinlp@foxmail.com)
+ */
 
 #pragma once
 
@@ -56,6 +56,9 @@ private:
     /* dropout rate for input and output, drop along the embedding axis */
     float lockedDropout;
 
+    /* tags vocab */
+    shared_ptr<Vocab> tagVocab;
+
     /* embedding */
     shared_ptr<StackEmbedding> embedding;
 
@@ -83,11 +86,11 @@ public:
     vector<vector<int>> Predict(const vector<vector<string>>& input);
 
     /* dump input sequences and label sequences to a file */
-    void DumpResult(vector<vector<string>>& src, vector<vector<string>>& tgt, const char* file);
+    void DumpResult(vector<vector<string>>& src, vector<vector<int>>& tgt, const char* file);
 
     /* constructor */
-    explicit SequenceTagger(int myDevID, int rnnLayer, int hiddenSize, 
-                            int tagNum, int embSize, shared_ptr<StackEmbedding> myEmbedding,
+    explicit SequenceTagger(int myDevID, int rnnLayer, int hiddenSize,
+                            int tagNum, int embSize, shared_ptr<StackEmbedding> myEmbedding, const char* tagVocabF,
                             float myDropout = 0.0f, float myWordropout = 0.0f, float myLockedropout = 0.0f);
 
     /* de-constructor */

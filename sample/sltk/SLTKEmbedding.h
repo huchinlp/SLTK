@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
- /*
-  * $Created by: HU Chi (huchinlp@foxmail.com)
-  */
+/*
+ * $Created by: HU Chi (huchinlp@foxmail.com)
+ */
 
 #pragma once
 
@@ -25,7 +25,6 @@
 #include "SLTKDataSet.h"
 #include "../../tensor/XTensor.h"
 #include "../../tensor/XGlobal.h"
-
 
 using namespace nts;
 using namespace std;

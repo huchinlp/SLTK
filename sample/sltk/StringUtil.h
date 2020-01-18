@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
- /*
-  * $Created by: HU Chi (huchinlp@foxmail.com) 2020-01-03
-  */
+/*
+ * $Created by: HU Chi (huchinlp@foxmail.com) 2020-01-03
+ */
 #pragma once
 
 #include <string>

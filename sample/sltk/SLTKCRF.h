@@ -15,9 +15,9 @@
  * limitations under the License.
  */
 
- /*
-  * $Created by: HU Chi (huchinlp@foxmail.com)
-  */
+/*
+ * $Created by: HU Chi (huchinlp@foxmail.com)
+ */
 
 #pragma once
 
@@ -28,27 +28,30 @@
 using namespace nts;
 using namespace std;
 
-/*  This module implements a conditional random field.
- *  The forward computation computes the log likelihood
- *  of the given sequence of tags and emission score tensor.
- *  It also has decode method which finds the best tag sequence
- *  given an emission score tensor using `Viterbi algorithm`.
- *  Ref: "Conditional random fields: Probabilistic models for segmenting and labeling sequence data".
- *  Viterbi algorithm: https://en.wikipedia.org/wiki/Viterbi_algorithm
+/* This module implements a conditional random field.
+ * The forward computation computes the log likelihood
+ * of the given sequence of tags and emission score tensor.
+ * It also has decode method which finds the best tag sequence
+ * given an emission score tensor using `Viterbi algorithm`.
+ * Ref: "Conditional random fields: Probabilistic models
+ * for segmenting and labeling sequence data".
+ * Viterbi algorithm:
+ * https://en.wikipedia.org/wiki/Viterbi_algorithm
  */
-
 struct CRF : public Model
 {
 public:
-
     /* number of tags */
     int tagNum;
 
-    /* if the first dim of input is batchSize */
-    bool batchFirst;
+    /* id for the start tag */
+    int startID;
+
+    /* id for the stop id */
+    int stopID;
 
     /* constructor */
-    CRF(int tagNum, bool batchFirst = true);
+    CRF(int myTagNum);
 
     /* initializer */
     void ResetParams();
@@ -57,7 +60,7 @@ public:
     vector<vector<int>> Decode(const XTensor& emissions, const XTensor& mask);
 
     /* viterbi decoder */
-    vector<vector<int>> ViterbiDecode(const XTensor& emissions, const XTensor& mask);
+    vector<int> ViterbiDecode(const XTensor& emissions, const XTensor& mask);
 };
 
 /* Return a tensor of elements selected from either x or y, depending on condition. */

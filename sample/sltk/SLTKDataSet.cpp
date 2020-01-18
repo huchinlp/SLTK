@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
- /*
+/*
  * $Created by: HU Chi (huchinlp@foxmail.com) 2020-01-03
  */
 
@@ -63,7 +63,7 @@ vector<vector<string>> DataSet::LoadBatch(int batchSize)
 
     /* load data to a mini-batch */
     vector<vector<string>> batch(buffers.begin() + cur, buffers.begin() + cur + bsz);
-    
+
     cur += bsz;
 
     //sort(batch.begin(), batch.end(), [](auto& a, auto& b) {return a.size() > b.size();});

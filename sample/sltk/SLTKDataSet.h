@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
- /*
+/*
  * $Created by: HU Chi (huchinlp@foxmail.com) 2020-01-03
  */
 
@@ -85,6 +85,3 @@ public:
     /* constructor */
     DataSet(const string& src, bool myShuffle = false);
 };
-
-/* compare two length (descending) */
-bool cmp(pair<int, int>& a, pair<int, int>& b);

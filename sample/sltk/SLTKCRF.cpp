@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include "SLTKCRF.h"
+#include "SLTKNNUtil.h"
 #include "../../tensor/core/CHeader.h"
 
 /*
@@ -28,13 +29,12 @@ constructor
 >>> tagNum - number of tags
 >>> batchFirst - if the first dim of input is batchSize
 */
-CRF::CRF(int myTagNum, bool myBatchFirst)
+CRF::CRF(int myTagNum)
 {
     tagNum = myTagNum;
-    batchFirst = myBatchFirst;
+    startID = myTagNum - 2;
+    stopID = myTagNum - 1;
     Register("Transitions", { tagNum, tagNum }, X_FLOAT);
-    Register("StartTransitions", { tagNum + 1 }, X_FLOAT);
-    Register("StopTransitions", { tagNum + 1 }, X_FLOAT);
     ResetParams();
 }
 
@@ -42,24 +42,23 @@ CRF::CRF(int myTagNum, bool myBatchFirst)
 void CRF::ResetParams()
 {
     Get("Transitions")->SetDataRand(-0.1f, 0.1f);
-    SetDataFixed(*Get("StartTransitions"), -1e4);
-    SetDataFixed(*Get("StopTransitions"), -1e4);
 }
 
 /*
 decoding
->>> emissions - the input, if batchFirst (bsz, len, tagNum), else (len, bsz, tagNum)
->>> mask - the mask, if batchFirst (bsz, len), else (len, bsz)
+>>> emissions - the input, (bsz, len, tagNum)
+>>> mask - the mask, (bsz, len)
 <<< the best tag sequence, (bsz, len)
 */
 vector<vector<int>> CRF::Decode(const XTensor& emissions, const XTensor& mask)
 {
-    if (batchFirst) {
-        auto e = Transpose(emissions, 0, 1);
-        auto m = Transpose(mask, 0, 1);
-        return ViterbiDecode(e, m);
-    }
-    return ViterbiDecode(emissions, mask);
+    TensorList batch;
+    Split(emissions, batch, 0);
+    vector<vector<int>> bestPaths;
+
+    for (int i = 0; i < batch.Size(); i++)
+        bestPaths.emplace_back(ViterbiDecode(*batch[i], mask));
+    return bestPaths;
 }
 
 /* Return a tensor of elements selected from either x or y, depending on condition. */
@@ -69,55 +68,72 @@ XTensor Where(const XTensor& condition, const XTensor& x, const XTensor& y)
 }
 
 /*
-viterbi decoding
->>> emissions - the input, shape: (len, bsz, tagNum)
->>> mask - the mask, shape: (len, bsz)
-<<< the best tag sequence, shape: (bsz, len)
+viterbi decoding on a sequence
+>>> emissions - the input, shape: (len, tagNum)
+>>> mask - the mask, shape: (len)
+<<< the best tag sequence, shape: (len)
 */
-vector<vector<int>> CRF::ViterbiDecode(const XTensor& emissions, const XTensor& mask)
+vector<int> CRF::ViterbiDecode(const XTensor& emissions, const XTensor& mask)
 {
-    int bsz = emissions.GetDim(1);
     int seqLen = emissions.GetDim(0);
-    auto trans = Get("stopTransitions");
-    auto start = Get("startTransitions");
-    auto stop = Get("stopTransitions");
+    auto trans = Get("Transitions");
 
-    /* start transition and first emission, shape: (bsz, tagNum) */
-    XTensor score = *stop + emissions[0];
-    vector<XTensor> history;
+    XTensor backpointers;
+    InitTensor2DV2(&backpointers, seqLen, tagNum, X_INT, trans->devID);
 
-    for (int i = 1; i < seqLen; i++) {
-        XTensor broadcastScore = Unsqueeze(score, 2);
-        XTensor broadcastEmission = Unsqueeze(emissions[i], 1);
-        XTensor nextScore = broadcastScore + *trans + broadcastEmission;
-        XTensor indices;
-        TopK(nextScore, nextScore, indices, 1, 1);
-        score = Where(mask[i], nextScore, score);
-        history.push_back(indices);
+    /* forwardVar shape: (1, tagNum) */
+    XTensor forwardVar;
+    InitTensor1DV2(&forwardVar, tagNum, X_FLOAT, trans->devID);
+    SetDataFixed(forwardVar, -1e4);
+    forwardVar.Set1D(0, startID);
+
+    TensorList timeSteps;
+    Split(emissions, timeSteps, 0);
+
+    /* iterations on timesteps  */
+    for (int t = 0; t < seqLen; t++) {
+        /* feature shape: (tagNum) */
+        XTensor& feature = *(timeSteps[t]);
+
+        /* nextTagVar shape: (tagNum, tagNum) */
+        XTensor nextTagVar = SumDim(*trans, forwardVar, 0);
+
+        XTensor bestTag, bestScore;
+        InitTensor2DV2(&bestTag, tagNum, 1, X_INT, trans->devID);
+        InitTensor2DV2(&bestScore, tagNum, 1, X_FLOAT, trans->devID);
+        TopK(nextTagVar, bestScore, bestTag, 1, 1);
+        bestScore.Reshape(tagNum);
+        forwardVar = bestScore + feature;
+
+        /* save the best tag */
+        int srcIdx[]{ 0 };
+        int tgtIdx[]{ t };
+        bestTag.Reshape(1, tagNum);
+        _CopyIndexed(&bestTag, &backpointers, 0, srcIdx, 1, tgtIdx);
     }
 
-    /* stop transition score */
-    score = score + *stop;
-    vector<vector<int>> bestTagsList;
-    auto seqStops = ReduceSum(mask, 0) - 1;
+    /* todo: optimize this section */
+    XTensor stopIdx;
+    InitTensor1DV2(&stopIdx, 1, X_INT, trans->devID);
+    stopIdx.Set1DInt(stopID, 0);
+    XTensor stopTransition = Select(*trans, stopIdx, 0);
 
-    for (int i = 0; i < bsz; i++) {
-        /* get the best tag for the last timestep */
-        XTensor bestLastTag;
-        XTensor bestLastScore;
-        TopK(score[i], bestLastScore, bestLastTag, 0, 1);
-        vector<int> bestTags = { bestLastTag.Get1DInt(0) };
+    /* get the best tag for the last token */
+    XTensor terminalVar = Squeeze(forwardVar) + stopTransition;
+    terminalVar.Set1D(-1e4, startID);
+    terminalVar.Set1D(-1e4, stopID);
 
-        /* trace back the best last tags */
-        for (int j = seqStops[i].Get1DInt(0) - 1; j >= 0; j--) {
-            bestLastTag = history[j][i][bestTags.back()];
-            bestTags.push_back(bestLastTag.Get1DInt(0));
-        }
+    XTensor bestTag, bestScore;
+    InitTensor1DV2(&bestTag, 1, X_INT, trans->devID);
+    InitTensor1DV2(&bestScore, 1, X_FLOAT, trans->devID);
+    TopK(terminalVar, bestScore, bestTag, 0, 1);
 
-        /* reverse the best last tags */
-        reverse(bestTags.begin(), bestTags.end());
-        bestTagsList.push_back(bestTags);
-    }
+    int bestTagID = bestTag.Get1DInt(0);
+    vector<int> bestPath{ bestTagID };
 
-    return bestTagsList;
+    for (int i = backpointers.GetDim(0) - 1; i > 0; i--)
+        bestPath.push_back(backpointers.Get2DInt(i, bestTagID));
+
+    reverse(bestPath.begin(), bestPath.end());
+    return bestPath;
 }
